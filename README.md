@@ -142,6 +142,48 @@ graphspec index spec/ --dry-run       # preview without writing
 graphspec index spec/ --no-index --log "Note only."
 ```
 
+### `graphspec graph [path]`
+
+Build the spec graph and emit it as JSON (default), a Mermaid `graph LR` diagram, or a
+Graphviz DOT digraph. By default only typed relation edges are emitted; `--structure` adds
+the implicit directory parent→child edges.
+
+```bash
+graphspec graph spec/                                   # JSON { nodes, edges }
+graphspec graph spec/ --format mermaid
+graphspec graph spec/ --format dot
+graphspec graph spec/ --from architecture/validator.component --depth 1
+graphspec graph spec/ --rel depends-on,satisfies        # restrict to relation types
+graphspec graph spec/ --structure                        # include parent/child edges
+```
+
+`--from <concept-id>` emits only the subgraph reachable from that concept (following typed
+relation edges outward), `--depth <n>` limits the number of hops, and an unresolved `--from`
+id exits non-zero with a clear error.
+
+### `graphspec coverage [path]`
+
+Report spec-graph completeness against the profile: unsatisfied/untested requirements,
+untested journeys, empty/unrealized features, dangling constraints, orphan concepts, and
+unresolved relation targets — each with the offending concept ids.
+
+```bash
+graphspec coverage spec/
+graphspec coverage spec/ --json       # machine-readable report
+graphspec coverage spec/ --strict     # exit non-zero when any gap is found (for CI)
+```
+
+### `graphspec order [path]`
+
+Print the topological build order of `System` and `Component` concepts derived from their
+`depends-on` edges (each node after everything it depends on). Dependency cycles are
+reported as an error with a non-zero exit.
+
+```bash
+graphspec order spec/
+graphspec order spec/ --json          # { order, cycles }
+```
+
 ## Library API
 
 The package is also importable. The profile is the single source of truth for the
@@ -156,6 +198,12 @@ const result = validateBundle(bundle, { strict: true });
 
 console.log(result.errorCount, result.warningCount);
 console.log(graph.neighbors("architecture/graphspec-cli.system", "contains"));
+
+import { selectSubgraph, buildOrder, analyzeCoverage } from "graphspec";
+
+const view = selectSubgraph(graph, { from: "architecture/validator.component", depth: 1 });
+const { order, cycles } = buildOrder(graph);
+const coverage = analyzeCoverage(graph);
 ```
 
 ## Example bundle
@@ -182,7 +230,6 @@ pnpm typecheck   # tsc --noEmit
 Deferred to later sessions and designed to layer on the existing graph model without a
 refactor:
 
-- **Session 2:** `graph` (JSON/Mermaid/DOT export), `coverage`, `order` commands.
 - **Session 3:** the `create-graph-spec` and `follow-graph-spec` skills.
 
 ## License
