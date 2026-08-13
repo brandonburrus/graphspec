@@ -77,6 +77,10 @@ export function buildProgram(): Command {
     .option("--from <concept-id>", "emit only the subgraph reachable from this concept")
     .option("--depth <n>", "limit hops from --from (default unlimited)")
     .option("--rel <name[,name...]>", "restrict to the given relation type(s)")
+    .option(
+      "--direction <out|in|both>",
+      "with --from, which way to follow edges: out (default), in, or both",
+    )
     .option("--structure", "include directory parent/child structural edges", false)
     .action(
       async (
@@ -87,6 +91,7 @@ export function buildProgram(): Command {
           depth?: string;
           rel?: string;
           structure?: boolean;
+          direction?: string;
         },
       ) => {
         const code = await runGraph(path, opts, consoleWriter);
