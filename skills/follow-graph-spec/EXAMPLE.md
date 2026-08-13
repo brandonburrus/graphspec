@@ -93,13 +93,13 @@ its two dependencies. **Next: read the three Requirement files in full.** They s
 That's the actual acceptance criteria to implement/verify against — read directly from the spec,
 not inferred.
 
-### The `--from` direction gotcha, proven on this same bundle
+### `--direction in`, proven on this same bundle
 
 `constrains` came back empty above — but is validator.component actually unconstrained? Checking
-a *different* concept in the same bundle proves the gotcha rather than just asserting it:
-`specification/zero-format-awareness.constraint.md` declares
+a *different* concept in the same bundle proves `--direction in` actually works rather than just
+asserting it: `specification/zero-format-awareness.constraint.md` declares
 `constrains: [/architecture/graphspec-cli.system.md]`, so the System genuinely is constrained.
-Pulling `--from` on the constrained concept itself still comes back empty:
+The default `--direction out` still comes back empty on the constrained concept itself:
 
 ```text
 $ graphspec graph spec/ --from architecture/graphspec-cli.system --rel constrains --depth 1
@@ -111,38 +111,61 @@ $ graphspec graph spec/ --from architecture/graphspec-cli.system --rel constrain
 }
 ```
 
-`--from` only walks edges outgoing from the given id, and `constrains` originates at the
-Constraint, not at the System. The correct way to check whether *anything* constrains a given
-concept is a bundle-wide, `--from`-less pull filtered by target:
+`out` (the default) only walks edges where `--from`'s id is the source, and `constrains`
+originates at the Constraint, not at the System. Adding `--direction in` walks the same edge
+backward and finds it:
 
 ```text
-$ graphspec graph spec/ --rel constrains
-...
+$ graphspec graph spec/ --from architecture/graphspec-cli.system --rel constrains --depth 1 --direction in
+{
+  "nodes": [
+    { "id": "architecture/graphspec-cli.system", "type": "System", "title": "graphspec CLI" },
+    { "id": "specification/zero-format-awareness.constraint", "type": "Constraint", "title": "Zero Format Awareness" }
+  ],
   "edges": [
-    { "from": "specification/permissive-okf.constraint", "to": "specification/okf-conformance.requirement", "relation": "constrains" },
     { "from": "specification/zero-format-awareness.constraint", "to": "architecture/graphspec-cli.system", "relation": "constrains" }
   ]
+}
 ```
 
-Filtering this list for `to === "architecture/validator.component"` finds nothing — so
-validator.component really has no Constraint targeting it (confirmed correctly this time,
-bundle-wide rather than via the blind-spot `--from` pull).
+Running the same query directly on validator.component with `--direction in` confirms it really
+has no Constraint targeting it — this time a trustworthy empty result, not a blind-spot false
+negative from the wrong default direction:
+
+```text
+$ graphspec graph spec/ --from architecture/validator.component --rel constrains --depth 1 --direction in
+{
+  "nodes": [
+    { "id": "architecture/validator.component", "type": "Component", "title": "Validator" }
+  ],
+  "edges": []
+}
+```
+
+*(Earlier versions of this workflow had no `--direction` flag and worked around the gap with a
+bundle-wide, `--from`-less `--rel constrains` pull filtered by hand for `to === <id>`. That still
+works, but `--direction in` is now the direct way to ask the question.)*
 
 ## Step 5: pull the covering test scenarios
 
+`covers` also originates at the annotator (the TestScenario), so finding what covers
+validator.component needs `--direction in` too:
+
 ```text
-$ graphspec graph spec/ --rel covers
-...
+$ graphspec graph spec/ --from architecture/validator.component --rel covers --depth 1 --direction in
+{
+  "nodes": [
+    { "id": "architecture/validator.component", "type": "Component", "title": "Validator" },
+    { "id": "specification/validate-golden.test-scenario", "type": "TestScenario", "title": "Validate Golden Bundle" }
+  ],
   "edges": [
-    { "from": "specification/query-filter.test-scenario", "to": "product/author-a-spec.user-journey", "relation": "covers" },
-    { "from": "specification/query-filter.test-scenario", "to": "specification/concept-filtering.requirement", "relation": "covers" },
-    { "from": "specification/validate-golden.test-scenario", "to": "architecture/validator.component", "relation": "covers" },
-    { "from": "specification/validate-golden.test-scenario", "to": "specification/okf-conformance.requirement", "relation": "covers" }
+    { "from": "specification/validate-golden.test-scenario", "to": "architecture/validator.component", "relation": "covers" }
   ]
+}
 ```
 
-Filtering for `to === "architecture/validator.component"` finds
-`specification/validate-golden.test-scenario` (`level: integration`):
+This surfaces `specification/validate-golden.test-scenario` (`level: integration`) directly — no
+bundle-wide fetch or manual filtering required. Its `# Given/When/Then` body:
 
 ```markdown
 # Given/When/Then

@@ -76,6 +76,81 @@ describe("graph command", () => {
     expect(ids).not.toContain("architecture/parser.component");
   });
 
+  it("--direction out (default) misses a constrains edge pointing at --from", async () => {
+    const w = new BufferWriter();
+    const code = await runGraph(
+      "spec",
+      { from: "architecture/graphspec-cli.system", rel: "constrains", depth: "1" },
+      w,
+    );
+    expect(code).toBe(0);
+    const parsed = JSON.parse(w.outText);
+    // constrains originates at the Constraint, not the System, so the default (out) direction
+    // finds no edges even though `specification/zero-format-awareness.constraint` constrains it.
+    expect(parsed.edges).toHaveLength(0);
+  });
+
+  it("--direction in finds the previously-missing constrains edge", async () => {
+    const w = new BufferWriter();
+    const code = await runGraph(
+      "spec",
+      {
+        from: "architecture/graphspec-cli.system",
+        rel: "constrains",
+        depth: "1",
+        direction: "in",
+      },
+      w,
+    );
+    expect(code).toBe(0);
+    const parsed = JSON.parse(w.outText);
+    expect(parsed.edges).toContainEqual({
+      from: "specification/zero-format-awareness.constraint",
+      to: "architecture/graphspec-cli.system",
+      relation: "constrains",
+    });
+  });
+
+  it("--direction in finds a covers edge pointing at --from", async () => {
+    const w = new BufferWriter();
+    const code = await runGraph(
+      "spec",
+      {
+        from: "architecture/validator.component",
+        rel: "covers",
+        depth: "1",
+        direction: "in",
+      },
+      w,
+    );
+    expect(code).toBe(0);
+    const parsed = JSON.parse(w.outText);
+    expect(parsed.edges).toContainEqual({
+      from: "specification/validate-golden.test-scenario",
+      to: "architecture/validator.component",
+      relation: "covers",
+    });
+  });
+
+  it("rejects an unknown --direction value", async () => {
+    const w = new BufferWriter();
+    const code = await runGraph(
+      "spec",
+      { from: "architecture/validator.component", direction: "sideways" },
+      w,
+    );
+    expect(code).toBe(2);
+    expect(w.errText).toContain("--direction must be one of out, in, both");
+  });
+
+  it("notes --direction is ignored without --from but still succeeds", async () => {
+    const w = new BufferWriter();
+    const code = await runGraph("spec", { direction: "in" }, w);
+    expect(code).toBe(0);
+    expect(w.errText).toContain("--direction is ignored without --from");
+    expect(() => JSON.parse(w.outText)).not.toThrow();
+  });
+
   it("errors clearly on an unresolved --from id", async () => {
     const w = new BufferWriter();
     const code = await runGraph("spec", { from: "does/not/exist" }, w);

@@ -81,7 +81,7 @@ itself is broken; fix that before using the order.
 
 For each Component/System in the order from step 3, pull only what it needs — don't re-read the
 whole bundle per unit of work. Its outgoing relations (`exposes`, `uses`, `satisfies`,
-`depends-on`) are safe to pull with `--from`:
+`depends-on`) are the default `--direction out` walk:
 
 ```bash
 graphspec graph <path> --from <component-id> --rel exposes,uses,satisfies --depth 1 --format json
@@ -91,13 +91,18 @@ This surfaces its Contracts (`exposes`), DataModels/Contracts (`uses`), and Requ
 (`satisfies`) in one shot. **Read those specific concept files in full before writing any code**
 — the subgraph tells you what's connected, the files tell you what it actually says.
 
-**Important direction gotcha, verified against this repo's own bundle:** `--from` only follows
-edges *outgoing* from the given id. `constrains` (Constraint → your concept) and `covers`
-(TestScenario → your concept) point the other way, so `--from <component-id> --rel constrains`
-returns nothing even when a Constraint genuinely constrains it. To find those, query bundle-wide
-instead and filter for your id as the target — see `references/traversal.md` for the exact
-command and the verified example that exposed this. Don't skip Constraints just because the
-naive `--from` pull came back empty.
+**Direction note:** `constrains` (Constraint → your concept) and `covers` (TestScenario → your
+concept) originate at the annotator, not at your concept, so the default `--direction out` finds
+nothing for them even when a real edge exists. Pull those with `--direction in` instead, which
+walks the edge backward:
+
+```bash
+graphspec graph <path> --from <component-id> --rel constrains --direction in --depth 1
+```
+
+See `references/traversal.md` for the full relation-direction table and a verified example
+against this repo's own bundle. Don't skip Constraints just because the default `out` direction
+came back empty.
 
 ### 5. Pull the covering test scenarios
 
@@ -105,16 +110,16 @@ Before or while implementing, find the TestScenarios that cover this unit of wor
 them into real automated tests (TDD-friendly: red before green):
 
 ```bash
-graphspec graph <path> --rel covers --format json
+graphspec graph <path> --from <component-id> --rel covers --direction in --depth 1
 ```
 
-Filter the returned `edges` for entries whose `to` is your component or requirement id; each
-`from` is a covering TestScenario id. Read that TestScenario's `level` (unit/integration/e2e) and
-its `# Given/When/Then` body, and write the corresponding real test before or alongside the
-implementation. `graphspec query <path> --type TestScenario --json` lists every TestScenario's
-id/title/description if you want the full inventory first — note it does **not** include
-`relations`, so confirming which one covers your unit still needs the `graph --rel covers` step
-above (or opening the file directly).
+`covers` also originates at the annotator (the TestScenario), so this needs `--direction in` —
+each other node in the result is a covering TestScenario id. Read its `level`
+(unit/integration/e2e) and its `# Given/When/Then` body, and write the corresponding real test
+before or alongside the implementation. `graphspec query <path> --type TestScenario --json` lists
+every TestScenario's id/title/description if you want the full inventory first — note it does
+**not** include `relations`, so confirming which one covers your unit still needs the `graph
+--rel covers --direction in` step above (or opening the file directly).
 
 ### 6. After implementing
 
@@ -132,8 +137,9 @@ in the order from step 3.
 ## Worked example
 
 `EXAMPLE.md` in this skill directory runs this exact workflow against this repo's own `spec/`
-dogfood bundle — including a real coverage gap it surfaces and the `--from` direction gotcha in
-practice — using one real Component (`architecture/validator.component`) as the unit of work.
+dogfood bundle — including a real coverage gap it surfaces and `--direction in` finding a
+`constrains`/`covers` edge in practice — using one real Component
+(`architecture/validator.component`) as the unit of work.
 
 ## Reference
 
