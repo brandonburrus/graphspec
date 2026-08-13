@@ -2,13 +2,19 @@
  * `graphspec graph [path]` — build the spec graph and emit it as JSON, Mermaid, or DOT.
  *
  * By default the whole typed-relation graph is emitted; `--from`/`--depth` select a reachable
- * subgraph, `--rel` restricts to specific relation names, and `--structure` adds the implicit
- * directory parent→child edges.
+ * subgraph, `--rel` restricts to specific relation names, `--direction` controls which way
+ * edges are followed from `--from` (default `out`), and `--structure` adds the implicit
+ * directory parent→child edges (also subject to `--direction`).
  */
 
 import { loadBundle } from "../core/bundle.js";
 import { CHILD_EDGE, type Edge, Graph } from "../core/graph.js";
-import { type GraphView, UnknownConceptError, selectSubgraph } from "../core/traverse.js";
+import {
+  type Direction,
+  type GraphView,
+  UnknownConceptError,
+  selectSubgraph,
+} from "../core/traverse.js";
 import type { Concept } from "../core/types.js";
 import { RELATION_NAMES } from "../profile/relations.js";
 import type { Writer } from "./io.js";
@@ -23,6 +29,7 @@ export interface GraphCommandOptions {
   depth?: string;
   rel?: string;
   structure?: boolean;
+  direction?: string;
 }
 
 /**
@@ -63,6 +70,19 @@ export async function runGraph(
     }
   }
 
+  let direction: Direction | undefined;
+  if (options.direction !== undefined) {
+    if (options.direction !== "out" && options.direction !== "in" && options.direction !== "both") {
+      writer.err(`error: --direction must be one of out, in, both (got '${options.direction}')`);
+      return 2;
+    }
+    if (options.from === undefined) {
+      writer.err("note: --direction is ignored without --from");
+    } else {
+      direction = options.direction;
+    }
+  }
+
   let view: GraphView;
   try {
     const bundle = await loadBundle(path);
@@ -72,6 +92,7 @@ export async function runGraph(
       depth,
       relations,
       structure: options.structure === true,
+      direction,
     });
   } catch (err) {
     if (err instanceof UnknownConceptError) {

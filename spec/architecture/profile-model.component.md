@@ -13,4 +13,4 @@ relations:
 # Responsibility
 
 Be the single source of truth for the 13 node types (tokens, required fields, sections)
-and 17 relations (allowed source and target types), imported by the validator and queries.
+and 16 relations (allowed source and target types), imported by the validator and queries.

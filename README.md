@@ -9,9 +9,10 @@ bundle — a directory tree of UTF-8 markdown files, each with YAML frontmatter,
 into a graph — constrained by the **graphspec profile**. graphspec has zero awareness of
 any other spec format; it only knows OKF plus the graphspec profile.
 
-> This is the session-1 foundation: the profile, the OKF parser + in-memory graph model,
-> and the `validate`, `query`, and `index` commands. Graph export, coverage, ordering, and
-> the authoring/following skills are deferred (see [Roadmap](#roadmap)).
+> This is the complete graphspec v1: the profile, the OKF parser + in-memory graph model, all
+> six CLI commands (`validate`, `query`, `index`, `graph`, `coverage`, `order`), and the
+> [`create-graph-spec` and `follow-graph-spec` agent skills](#agent-skills) for authoring and
+> implementing from a graphspec bundle.
 
 ## Installation
 
@@ -216,6 +217,29 @@ graphspec validate spec/
 # 25 concept(s), 0 error(s), 0 warning(s)
 ```
 
+## Agent Skills
+
+[`skills/`](skills/) has two portable **Agent Skills** — the `SKILL.md` + directory convention
+used by Copilot/Claude-style agent runtimes, each a self-contained instructions file plus
+supporting reference/example files — for driving graphspec end to end with a coding agent:
+
+- **[`create-graph-spec`](skills/create-graph-spec/SKILL.md)** — author a new graphspec bundle,
+  or add concepts to an existing one, from a product/engineering intent (a feature idea, a
+  system design, a requirement to capture). Walks filename/frontmatter conventions, wiring
+  `relations:`, and iterative `validate` → `--strict` → `index` → `query` verification. An agent
+  reaches for this when asked to write, create, or extend a graphspec.
+- **[`follow-graph-spec`](skills/follow-graph-spec/SKILL.md)** — implement software from an
+  *existing* graphspec bundle by pulling only the subgraph relevant to each unit of work
+  (`graph --from <id> --rel ...`) instead of reading the whole bundle, in `order`-derived build
+  sequence, porting each unit's covering `TestScenario`s into real tests. An agent reaches for
+  this when asked to implement or build from a graphspec bundle.
+
+Both are written in the plain, portable `SKILL.md` convention (YAML frontmatter with `name` +
+a trigger-phrase `description`, an imperative body, optional `references/` and worked
+`EXAMPLE.md` files) with no dependency on any specific agent runtime. To use them, point your
+agent tool's skills directory at (or copy/symlink into it) `skills/create-graph-spec` and
+`skills/follow-graph-spec` — consult your agent runtime's docs for where that directory lives.
+
 ## Development
 
 ```bash
@@ -224,13 +248,6 @@ pnpm test        # vitest
 pnpm lint        # biome check
 pnpm typecheck   # tsc --noEmit
 ```
-
-## Roadmap
-
-Deferred to later sessions and designed to layer on the existing graph model without a
-refactor:
-
-- **Session 3:** the `create-graph-spec` and `follow-graph-spec` skills.
 
 ## License
 
