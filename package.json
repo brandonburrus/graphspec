@@ -1,0 +1,45 @@
+{
+  "name": "graphspec",
+  "version": "0.1.0",
+  "description": "A CLI + library for spec-driven development: author software specs as an OKF knowledge graph and build software by traversing it.",
+  "type": "module",
+  "license": "MIT",
+  "author": "brandonburrus",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/brandonburrus/graphspec.git"
+  },
+  "keywords": ["spec-driven-development", "okf", "knowledge-graph", "cli", "ai-agents"],
+  "bin": {
+    "graphspec": "./dist/cli.js"
+  },
+  "files": ["dist", "README.md"],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write ."
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "gray-matter": "^4.0.3"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}
