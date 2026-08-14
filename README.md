@@ -9,9 +9,10 @@ bundle — a directory tree of UTF-8 markdown files, each with YAML frontmatter,
 into a graph — constrained by the **graphspec profile**. graphspec has zero awareness of
 any other spec format; it only knows OKF plus the graphspec profile.
 
-> This is the session-1 foundation: the profile, the OKF parser + in-memory graph model,
-> and the `validate`, `query`, and `index` commands. Graph export, coverage, ordering, and
-> the authoring/following skills are deferred (see [Roadmap](#roadmap)).
+> This is the complete graphspec v1: the profile, the OKF parser + in-memory graph model, all
+> six CLI commands (`validate`, `query`, `index`, `graph`, `coverage`, `order`), and the
+> [`create-graph-spec` and `follow-graph-spec` agent skills](#agent-skills) for authoring and
+> implementing from a graphspec bundle.
 
 ## Installation
 
@@ -142,6 +143,48 @@ graphspec index spec/ --dry-run       # preview without writing
 graphspec index spec/ --no-index --log "Note only."
 ```
 
+### `graphspec graph [path]`
+
+Build the spec graph and emit it as JSON (default), a Mermaid `graph LR` diagram, or a
+Graphviz DOT digraph. By default only typed relation edges are emitted; `--structure` adds
+the implicit directory parent→child edges.
+
+```bash
+graphspec graph spec/                                   # JSON { nodes, edges }
+graphspec graph spec/ --format mermaid
+graphspec graph spec/ --format dot
+graphspec graph spec/ --from architecture/validator.component --depth 1
+graphspec graph spec/ --rel depends-on,satisfies        # restrict to relation types
+graphspec graph spec/ --structure                        # include parent/child edges
+```
+
+`--from <concept-id>` emits only the subgraph reachable from that concept (following typed
+relation edges outward), `--depth <n>` limits the number of hops, and an unresolved `--from`
+id exits non-zero with a clear error.
+
+### `graphspec coverage [path]`
+
+Report spec-graph completeness against the profile: unsatisfied/untested requirements,
+untested journeys, empty/unrealized features, dangling constraints, orphan concepts, and
+unresolved relation targets — each with the offending concept ids.
+
+```bash
+graphspec coverage spec/
+graphspec coverage spec/ --json       # machine-readable report
+graphspec coverage spec/ --strict     # exit non-zero when any gap is found (for CI)
+```
+
+### `graphspec order [path]`
+
+Print the topological build order of `System` and `Component` concepts derived from their
+`depends-on` edges (each node after everything it depends on). Dependency cycles are
+reported as an error with a non-zero exit.
+
+```bash
+graphspec order spec/
+graphspec order spec/ --json          # { order, cycles }
+```
+
 ## Library API
 
 The package is also importable. The profile is the single source of truth for the
@@ -156,6 +199,12 @@ const result = validateBundle(bundle, { strict: true });
 
 console.log(result.errorCount, result.warningCount);
 console.log(graph.neighbors("architecture/graphspec-cli.system", "contains"));
+
+import { selectSubgraph, buildOrder, analyzeCoverage } from "graphspec";
+
+const view = selectSubgraph(graph, { from: "architecture/validator.component", depth: 1 });
+const { order, cycles } = buildOrder(graph);
+const coverage = analyzeCoverage(graph);
 ```
 
 ## Example bundle
@@ -168,6 +217,29 @@ graphspec validate spec/
 # 25 concept(s), 0 error(s), 0 warning(s)
 ```
 
+## Agent Skills
+
+[`skills/`](skills/) has two portable **Agent Skills** — the `SKILL.md` + directory convention
+used by Copilot/Claude-style agent runtimes, each a self-contained instructions file plus
+supporting reference/example files — for driving graphspec end to end with a coding agent:
+
+- **[`create-graph-spec`](skills/create-graph-spec/SKILL.md)** — author a new graphspec bundle,
+  or add concepts to an existing one, from a product/engineering intent (a feature idea, a
+  system design, a requirement to capture). Walks filename/frontmatter conventions, wiring
+  `relations:`, and iterative `validate` → `--strict` → `index` → `query` verification. An agent
+  reaches for this when asked to write, create, or extend a graphspec.
+- **[`follow-graph-spec`](skills/follow-graph-spec/SKILL.md)** — implement software from an
+  *existing* graphspec bundle by pulling only the subgraph relevant to each unit of work
+  (`graph --from <id> --rel ...`) instead of reading the whole bundle, in `order`-derived build
+  sequence, porting each unit's covering `TestScenario`s into real tests. An agent reaches for
+  this when asked to implement or build from a graphspec bundle.
+
+Both are written in the plain, portable `SKILL.md` convention (YAML frontmatter with `name` +
+a trigger-phrase `description`, an imperative body, optional `references/` and worked
+`EXAMPLE.md` files) with no dependency on any specific agent runtime. To use them, point your
+agent tool's skills directory at (or copy/symlink into it) `skills/create-graph-spec` and
+`skills/follow-graph-spec` — consult your agent runtime's docs for where that directory lives.
+
 ## Development
 
 ```bash
@@ -176,14 +248,6 @@ pnpm test        # vitest
 pnpm lint        # biome check
 pnpm typecheck   # tsc --noEmit
 ```
-
-## Roadmap
-
-Deferred to later sessions and designed to layer on the existing graph model without a
-refactor:
-
-- **Session 2:** `graph` (JSON/Mermaid/DOT export), `coverage`, `order` commands.
-- **Session 3:** the `create-graph-spec` and `follow-graph-spec` skills.
 
 ## License
 

@@ -8,3 +8,6 @@ export * from "./sections.js";
 export * from "./parser.js";
 export * from "./bundle.js";
 export * from "./graph.js";
+export * from "./traverse.js";
+export * from "./order.js";
+export * from "./coverage.js";
