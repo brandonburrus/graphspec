@@ -76,7 +76,10 @@ export function buildProgram(): Command {
     .argument("[path]", "path to the OKF bundle", ".")
     .description("Build the spec graph and emit it as JSON, Mermaid, or DOT")
     .option("--format <format>", "output format: json, mermaid, or dot", "json")
-    .option("--from <concept-id>", "emit only the subgraph reachable from this concept")
+    .option(
+      "--from <concept>",
+      "emit only the subgraph reachable from this concept (id or /path.md reference)",
+    )
     .option("--depth <n>", "limit hops from --from (default unlimited)")
     .option("--rel <name[,name...]>", "restrict to the given relation type(s)")
     .option(

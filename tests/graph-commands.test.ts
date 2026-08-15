@@ -76,6 +76,33 @@ describe("graph command", () => {
     expect(ids).not.toContain("architecture/parser.component");
   });
 
+  it("accepts --from in relation-reference form, matching the bare concept id", async () => {
+    const baseline = new BufferWriter();
+    expect(
+      await runGraph("spec", { from: "architecture/validator.component", depth: "1" }, baseline),
+    ).toBe(0);
+
+    // The leading-slash, `.md`-suffixed form is what the profile mandates for relation
+    // targets in frontmatter, so it is the form a user has in hand when they go to traverse.
+    for (const ref of [
+      "/architecture/validator.component.md",
+      "/architecture/validator.component",
+      "architecture/validator.component.md",
+    ]) {
+      const w = new BufferWriter();
+      expect(await runGraph("spec", { from: ref, depth: "1" }, w)).toBe(0);
+      expect(w.outText).toBe(baseline.outText);
+    }
+  });
+
+  it("reports the reference as typed when --from does not resolve", async () => {
+    const w = new BufferWriter();
+    const code = await runGraph("spec", { from: "/does/not/exist.md" }, w);
+    expect(code).toBe(2);
+    expect(w.errText).toContain("concept not found");
+    expect(w.errText).toContain("/does/not/exist.md");
+  });
+
   it("--direction out (default) misses a constrains edge pointing at --from", async () => {
     const w = new BufferWriter();
     const code = await runGraph(

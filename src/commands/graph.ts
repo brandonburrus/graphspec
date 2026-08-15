@@ -5,10 +5,14 @@
  * subgraph, `--rel` restricts to specific relation names, `--direction` controls which way
  * edges are followed from `--from` (default `out`), and `--structure` adds the implicit
  * directory parent→child edges (also subject to `--direction`).
+ *
+ * `--from` accepts either a bare concept ID or the leading-slash `.md` reference form used by
+ * `relations:` targets; both normalize to the same concept.
  */
 
 import { loadBundle } from "../core/bundle.js";
 import { CHILD_EDGE, type Edge, Graph } from "../core/graph.js";
+import { normalizeRef } from "../core/refs.js";
 import {
   type Direction,
   type GraphView,
@@ -83,12 +87,18 @@ export async function runGraph(
     }
   }
 
+  // Accept the same reference form the profile mandates for relation targets in frontmatter
+  // (`/a/b.component.md`, with or without the leading slash and `.md`) as well as a bare
+  // concept ID, so a target copied out of a `relations:` block can be pasted straight into
+  // `--from`. The raw input is kept for error reporting.
+  const from = options.from === undefined ? undefined : normalizeRef(options.from);
+
   let view: GraphView;
   try {
     const bundle = await loadBundle(path);
     const graph = Graph.fromBundle(bundle);
     view = selectSubgraph(graph, {
-      from: options.from,
+      from,
       depth,
       relations,
       structure: options.structure === true,
@@ -96,7 +106,7 @@ export async function runGraph(
     });
   } catch (err) {
     if (err instanceof UnknownConceptError) {
-      writer.err(`error: --from concept not found: ${err.conceptId}`);
+      writer.err(`error: --from concept not found: ${options.from}`);
       return 2;
     }
     writer.err(`error: ${(err as Error).message}`);
