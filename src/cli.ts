@@ -3,6 +3,7 @@
  * graphspec CLI entry point.
  */
 
+import { fileURLToPath } from "node:url";
 import { Command } from "commander";
 import { banner } from "./banner.js";
 import { runCoverage } from "./commands/coverage.js";
@@ -12,6 +13,7 @@ import { consoleWriter } from "./commands/io.js";
 import { runOrder } from "./commands/order.js";
 import { runQuery } from "./commands/query.js";
 import { runValidate } from "./commands/validate.js";
+import { packageVersion } from "./version.js";
 
 /** Build the commander program (exported for testing). */
 export function buildProgram(): Command {
@@ -23,7 +25,7 @@ export function buildProgram(): Command {
       "Author software specs as an OKF knowledge graph and build software by traversing it.",
     )
     .addHelpText("beforeAll", banner())
-    .version("0.1.0");
+    .version(packageVersion());
 
   program
     .command("validate")
@@ -133,7 +135,11 @@ async function main(): Promise<void> {
   await program.parseAsync(process.argv);
 }
 
-main().catch((err) => {
-  process.stderr.write(`error: ${(err as Error).message}\n`);
-  process.exitCode = 2;
-});
+// Only run when invoked as the binary. Without this guard, importing the module (as the tests
+// do, to assert on the built program) parses the importer's argv and exits the process.
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main().catch((err) => {
+    process.stderr.write(`error: ${(err as Error).message}\n`);
+    process.exitCode = 2;
+  });
+}
