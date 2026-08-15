@@ -45,6 +45,8 @@ These are load-bearing. Violating one silently breaks the product thesis.
 | `spec/` | graphspec's own spec, as a graphspec bundle. See `spec/AGENTS.md`. |
 | `skills/` | Portable `SKILL.md` agent skills, with no dependency on any agent runtime. |
 | `tests/` | Vitest suites, mirroring the source module layout. |
+| `docs/` | The graphspec.dev Astro site. See `docs/AGENTS.md`. |
+| `.github/workflows/` | `publish.yml` ships the package, `docs.yml` ships the site. Both fire on release. |
 
 ## Conventions
 
@@ -85,9 +87,26 @@ every documented invocation. Consequences to keep straight:
 
 `dist/` is gitignored and built at pack time, so never commit it.
 
+Releases are automated. Publishing a GitHub release triggers both
+`.github/workflows/publish.yml` (npm) and `.github/workflows/docs.yml` (graphspec.dev), so the
+site and the package always describe the same version.
+
 ```bash
-npm version <patch|minor|major>   # tags the release
-npm publish                       # runs the gate below, then publishes
+npm version <patch|minor|major>   # bumps package.json and tags
+git push --follow-tags
+gh release create <tag> --generate-notes
+```
+
+npm uses **trusted publishing** via OIDC, so there is no `NPM_TOKEN` in this repository. The
+workflow needs `id-token: write` and npm >= 11.5.1; removing either breaks publishing with an
+authentication error rather than an obvious one. The workflow also fails early when the
+release tag does not match `package.json`, which is the mistake that would otherwise ship the
+wrong version under a right-looking release.
+
+Publishing by hand still works and runs the same gate:
+
+```bash
+npm publish
 ```
 
 - `prepublishOnly` runs lint → typecheck → test, so a red repo cannot be published.
