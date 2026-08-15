@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { describe, expect, it } from "vitest";
-import { buildProgram } from "../src/cli.js";
+import { buildProgram } from "../src/program.js";
 import { packageVersion } from "../src/version.js";
 
 /** The manifest version, read independently of the code under test. */
@@ -21,6 +21,15 @@ describe("package version", () => {
   // release left `--version` reporting the previous number.
   it("wires that version into the CLI rather than a hardcoded literal", () => {
     expect(buildProgram().version()).toBe(manifestVersion());
+  });
+
+  // `npx <package>` runs the bin whose name matches the package name. The package is
+  // `graph-spec-cli` while the command is `graphspec`, so without a second bin entry every
+  // documented `npx graph-spec-cli ...` invocation dies with "command not found".
+  it("exposes a bin named after the package so npx resolves it", () => {
+    const manifest = JSON.parse(readFileSync("package.json", "utf8"));
+    expect(Object.keys(manifest.bin)).toContain(manifest.name);
+    expect(Object.keys(manifest.bin)).toContain("graphspec");
   });
 
   it("throws a located error when the manifest has no version", async () => {

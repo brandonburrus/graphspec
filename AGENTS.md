@@ -80,7 +80,11 @@ similar to the existing `graph-spec` package, and renaming the command too would
 every documented invocation. Consequences to keep straight:
 
 - `npx graph-spec-cli <cmd>` is the portable form and the one all docs and skills use, because
-  npx resolves the *package* name.
+  npx resolves the *package* name. **That only works because `bin` declares two names**,
+  `graphspec` and `graph-spec-cli`, both pointing at `dist/cli.js`. npx runs the bin matching
+  the package name and does not fall back to a lone differently-named bin, so dropping the
+  second entry breaks every documented invocation with "command not found". A test in
+  `tests/version.test.ts` pins this.
 - `npx graphspec <cmd>` works only inside this checkout (npx matches the local package's own bin
   name) or where the package is already installed. Do not put it in user-facing docs.
 - Library imports use the package name: `import { … } from "graph-spec-cli"`.

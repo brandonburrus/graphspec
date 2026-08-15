@@ -4,6 +4,12 @@ One module per subcommand (`validate`, `query`, `index-cmd`, `graph`, `coverage`
 plus `io.ts` (the `Writer` seam) and `table.ts` (shared formatting). `src/cli.ts` owns
 Commander wiring and flag parsing; these modules own behavior.
 
+`src/cli.ts` is the entry point and does nothing but run the program. The program itself is
+built in `src/program.ts`, so tests can inspect it without importing a module that parses
+argv and exits. Do not merge them back: guarding the entry with an
+`import.meta.url === process.argv[1]` check looks equivalent but silently disables the CLI
+when it runs through a symlinked `node_modules/.bin` entry.
+
 ## Contract every command follows
 
 - Signature is `run<Name>(path, options, writer) => Promise<number>`, returning the process

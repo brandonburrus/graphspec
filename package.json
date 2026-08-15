@@ -1,6 +1,6 @@
 {
   "name": "graph-spec-cli",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "GraphSpec: a CLI + library for spec-driven development: author software specs as an OKF knowledge graph and build software by traversing it.",
   "type": "module",
   "license": "MIT",
@@ -15,7 +15,8 @@
   },
   "keywords": ["spec-driven-development", "okf", "knowledge-graph", "cli", "ai-agents"],
   "bin": {
-    "graphspec": "dist/cli.js"
+    "graphspec": "dist/cli.js",
+    "graph-spec-cli": "dist/cli.js"
   },
   "files": ["dist", "src", "skills", "README.md", "LICENSE"],
   "publishConfig": {
