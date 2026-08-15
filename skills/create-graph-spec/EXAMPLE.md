@@ -108,7 +108,7 @@ First pass — the missing `status` shows up as a profile warning, not an OKF er
 bundle is still usable, just incomplete:
 
 ```text
-$ npx graphspec validate .
+$ npx graph-spec-cli validate .
 specification/deliver-email.requirement.md: warning [profile/missing-required-field]: Requirement requires a non-empty "status" frontmatter field.
 4 concept(s), 0 error(s), 1 warning(s)
 ```
@@ -117,7 +117,7 @@ Running `--strict` at this point promotes it to a real, non-zero-exit error — 
 strict mode's promotion rule:
 
 ```text
-$ npx graphspec validate . --strict
+$ npx graph-spec-cli validate . --strict
 specification/deliver-email.requirement.md: error [profile/missing-required-field]: Requirement requires a non-empty "status" frontmatter field.
 4 concept(s), 1 error(s), 0 warning(s) [strict]
 $ echo $?
@@ -152,10 +152,10 @@ Fix: add `status: proposed` to the Requirement's frontmatter (Requirement's vali
 Re-validate, both plain and strict:
 
 ```text
-$ npx graphspec validate .
+$ npx graph-spec-cli validate .
 4 concept(s), 0 error(s), 0 warning(s)
 
-$ npx graphspec validate . --strict
+$ npx graph-spec-cli validate . --strict
 4 concept(s), 0 error(s), 0 warning(s) [strict]
 ```
 
@@ -164,7 +164,7 @@ Clean under `--strict` — the bundle is done.
 ## Step 6: regenerate the index
 
 ```text
-$ npx graphspec index . --log "Added the email-notifications feature and its persona/journey/requirement."
+$ npx graph-spec-cli index . --log "Added the email-notifications feature and its persona/journey/requirement."
 wrote index.md
 wrote product/index.md
 wrote specification/index.md
@@ -203,14 +203,14 @@ Resulting `log.md`:
 ## Step 7: query sanity check
 
 ```text
-$ npx graphspec query . --type Feature
+$ npx graph-spec-cli query . --type Feature
 ID                                   TYPE     TITLE
 -----------------------------------  -------  -------------------
 product/email-notifications.feature  Feature  Email Notifications
 
 1 concept(s).
 
-$ npx graphspec query . --type Requirement
+$ npx graph-spec-cli query . --type Requirement
 ID                                       TYPE         TITLE
 ---------------------------------------  -----------  --------------------------
 specification/deliver-email.requirement  Requirement  Deliver Email Notification

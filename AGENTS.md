@@ -72,8 +72,18 @@ dogfood fixture and is expected to stay at 0 errors, 0 warnings, and 0 coverage 
 
 ## Releasing
 
-Published to npm as `graphspec` (unscoped, public). `dist/` is gitignored and built at pack
-time, so never commit it.
+Published to npm as **`graph-spec-cli`** (unscoped, public), while the binary it installs is
+named **`graphspec`**. The names differ on purpose: npm rejected `graphspec` with a 403 as too
+similar to the existing `graph-spec` package, and renaming the command too would have broken
+every documented invocation. Consequences to keep straight:
+
+- `npx graph-spec-cli <cmd>` is the portable form and the one all docs and skills use, because
+  npx resolves the *package* name.
+- `npx graphspec <cmd>` works only inside this checkout (npx matches the local package's own bin
+  name) or where the package is already installed. Do not put it in user-facing docs.
+- Library imports use the package name: `import { … } from "graph-spec-cli"`.
+
+`dist/` is gitignored and built at pack time, so never commit it.
 
 ```bash
 npm version <patch|minor|major>   # tags the release
@@ -85,7 +95,7 @@ npm publish                       # runs the gate below, then publishes
 - `files` ships `dist`, `src`, `skills`, `README.md`, `LICENSE`. `src` is included so the
   shipped `.js.map`/`.d.ts.map` files resolve to real sources; dropping it silently breaks
   consumer debugging. `skills` is included because the README points users at those paths.
-- The package is **ESM-only**. There is no CommonJS build and `require("graphspec")` will
+- The package is **ESM-only**. There is no CommonJS build and `require("graph-spec-cli")` will
   not work; that is deliberate, not an oversight.
 - Verify a release candidate the way a consumer sees it, not just via `npm pack`:
   `npm pack`, then in a scratch directory with `"type": "module"`, `npm install
@@ -98,3 +108,9 @@ npm publish                       # runs the gate below, then publishes
   format keeps bundles readable by other tools and keeps graphspec's scope to the profile.
 - 2026-08-13: Express the profile as a typed data module rather than scattered validation
   logic. Why: the vocabulary is then introspectable and extensible in one place.
+- 2026-08-15: Publish as `graph-spec-cli` but keep the binary named `graphspec`. Why: npm 403s
+  the name `graphspec` as too similar to the existing `graph-spec`, and renaming the command
+  would have churned every documented invocation.
+- 2026-08-15: Only `<name>.<type-token>.md` files count as concepts; other `.md` files are
+  ignored and reported. Why: lets `AGENTS.md`/`README.md` live inside a bundle, at the cost of
+  a deliberate deviation from OKF's "every non-reserved file is a concept" rule.

@@ -1,15 +1,18 @@
-# graphspec
+# GraphSpec
 
-**graphspec** is a CLI + library for *spec-driven development*: author software specs as a
+**GraphSpec** is a CLI + library for *spec-driven development*: author software specs as a
 **knowledge graph**, then build software by traversing it.
 
 A spec is an [Open Knowledge Format (OKF) v0.1](https://okf.md/spec) bundle — a directory of
 markdown files with YAML frontmatter, cross-linked by typed relations — constrained by the
-**graphspec profile**. Because the spec is a graph rather than a document, an agent can pull
+**GraphSpec profile**. Because the spec is a graph rather than a document, an agent can pull
 just the subgraph for the unit of work in front of it instead of re-reading a 40-page design
 doc, and `coverage` can tell you mechanically which requirements nothing implements or tests.
 
-graphspec knows OKF and the graphspec profile. Nothing else.
+GraphSpec knows OKF and the GraphSpec profile. Nothing else.
+
+The npm package is [`graph-spec-cli`](https://www.npmjs.com/package/graph-spec-cli); the command
+it installs is `graphspec`.
 
 ## Quickstart
 
@@ -23,7 +26,7 @@ npx skills add brandonburrus/graphspec
 
 Works with Claude Code, Cursor, Codex, Copilot, Windsurf, Gemini, and others. Then just ask:
 
-> "Spec out the checkout flow as a graphspec."
+> "Spec out the checkout flow as a GraphSpec."
 > "Implement the next component from the spec."
 
 `create-graph-spec` handles authoring; `follow-graph-spec` handles implementing from an
@@ -35,9 +38,9 @@ test. See [Agent skills](#agent-skills).
 No install needed:
 
 ```bash
-npx graphspec validate spec/
-npx graphspec coverage spec/
-npx graphspec graph spec/ --format mermaid
+npx graph-spec-cli validate spec/
+npx graph-spec-cli coverage spec/
+npx graph-spec-cli graph spec/ --format mermaid
 ```
 
 Requires Node.js >= 20.
@@ -141,18 +144,18 @@ flag, unreadable bundle).
 
 ```bash
 # Pull just the subgraph for one unit of work.
-npx graphspec graph spec/ --from architecture/validator.component --depth 1
-npx graphspec graph spec/ --from /architecture/validator.component.md   # same thing
-npx graphspec graph spec/ --from specification/strict-mode.requirement --direction in
+npx graph-spec-cli graph spec/ --from architecture/validator.component --depth 1
+npx graph-spec-cli graph spec/ --from /architecture/validator.component.md   # same thing
+npx graph-spec-cli graph spec/ --from specification/strict-mode.requirement --direction in
 
 # What is unimplemented or untested? Non-zero under --strict, so CI can gate on it.
-npx graphspec coverage spec/ --strict
+npx graph-spec-cli coverage spec/ --strict
 
 # What should be built first?
-npx graphspec order spec/
+npx graph-spec-cli order spec/
 
 # Regenerate listings after adding concepts.
-npx graphspec index spec/ --log "Added the payments feature."
+npx graph-spec-cli index spec/ --log "Added the payments feature."
 ```
 
 `--from` takes a concept ID or the same `/path.md` reference form used in `relations:`.
@@ -162,8 +165,8 @@ concept, since those relations originate elsewhere.
 ## Library API
 
 ```ts
-import { loadBundle, Graph, validateBundle, PROFILE } from "graphspec";
-import { selectSubgraph, buildOrder, analyzeCoverage } from "graphspec";
+import { loadBundle, Graph, validateBundle, PROFILE } from "graph-spec-cli";
+import { selectSubgraph, buildOrder, analyzeCoverage } from "graph-spec-cli";
 
 const bundle = await loadBundle("spec");
 const graph = Graph.fromBundle(bundle);
@@ -174,7 +177,7 @@ buildOrder(graph);                                                          // {
 analyzeCoverage(graph);                                                     // gap report
 ```
 
-`npm install graphspec`. ESM-only: import it, don't `require` it. `PROFILE` is the single
+`npm install graph-spec-cli`. ESM-only: import it, don't `require` it. `PROFILE` is the single
 source of truth for the vocabulary if you're building on top.
 
 ## Agent skills
@@ -201,12 +204,12 @@ Or copy the directories into wherever your agent runtime keeps skills.
 
 ## Example bundle
 
-[`spec/`](spec/) is graphspec specified in graphspec — the dogfood bundle and the worked
+[`spec/`](spec/) is GraphSpec specified in GraphSpec — the dogfood bundle and the worked
 example. It stays clean:
 
 ```bash
-npx graphspec validate spec/ --strict   # 27 concept(s), 0 error(s), 0 warning(s)
-npx graphspec coverage spec/            # 0 gap(s)
+npx graph-spec-cli validate spec/ --strict   # 27 concept(s), 0 error(s), 0 warning(s)
+npx graph-spec-cli coverage spec/            # 0 gap(s)
 ```
 
 ## Development

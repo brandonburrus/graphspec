@@ -6,11 +6,11 @@ this repo's own dogfood bundle (`spec/`) and the output shapes below are real, n
 ## Command reference
 
 ```text
-npx graphspec validate [path] [--strict] [--json]
-npx graphspec query    [path] [--type <T>] [--tag <t>] [--status <s>] [--json]
-npx graphspec graph    [path] [--format json|mermaid|dot] [--from <concept>] [--depth <n>] [--rel <name[,name...]>] [--direction out|in|both] [--structure]
-npx graphspec coverage [path] [--json] [--strict]
-npx graphspec order    [path] [--json]
+npx graph-spec-cli validate [path] [--strict] [--json]
+npx graph-spec-cli query    [path] [--type <T>] [--tag <t>] [--status <s>] [--json]
+npx graph-spec-cli graph    [path] [--format json|mermaid|dot] [--from <concept>] [--depth <n>] [--rel <name[,name...]>] [--direction out|in|both] [--structure]
+npx graph-spec-cli coverage [path] [--json] [--strict]
+npx graph-spec-cli order    [path] [--json]
 ```
 
 - `path` defaults to `.` on every command.
@@ -40,7 +40,7 @@ npx graphspec order    [path] [--json]
 
 ## Traversal direction: `--from` + `--direction`
 
-`npx graphspec graph --from <id>` does a breadth-first walk bounded by `--depth`, and `--direction`
+`npx graph-spec-cli graph --from <id>` does a breadth-first walk bounded by `--depth`, and `--direction`
 controls which way it follows edges at each visited node (default `out`, preserving the
 historical behavior):
 
@@ -66,7 +66,7 @@ The default `--direction out` still returns zero edges here, because the Constra
 System — is the `from` side:
 
 ```text
-$ npx graphspec graph spec/ --from architecture/graphspec-cli.system --rel constrains --depth 1
+$ npx graph-spec-cli graph spec/ --from architecture/graphspec-cli.system --rel constrains --depth 1
 {
   "nodes": [
     { "id": "architecture/graphspec-cli.system", "type": "System", "title": "graphspec CLI" }
@@ -78,7 +78,7 @@ $ npx graphspec graph spec/ --from architecture/graphspec-cli.system --rel const
 Adding `--direction in` walks the same edge backward and finds it:
 
 ```text
-$ npx graphspec graph spec/ --from architecture/graphspec-cli.system --rel constrains --depth 1 --direction in
+$ npx graph-spec-cli graph spec/ --from architecture/graphspec-cli.system --rel constrains --depth 1 --direction in
 {
   "nodes": [
     { "id": "architecture/graphspec-cli.system", "type": "System", "title": "graphspec CLI" },
@@ -121,7 +121,7 @@ graph — but `--direction in` is the direct way to ask "what constrains/covers 
 
 ## `order`'s algorithm, briefly
 
-`npx graphspec order` is a topological sort (Kahn's algorithm) over `System`/`Component` concepts'
+`npx graph-spec-cli order` is a topological sort (Kahn's algorithm) over `System`/`Component` concepts'
 `depends-on` edges only, alphabetical tie-break for determinism. `order` only looks at
 `depends-on` — a System that `contains` every Component in the bundle but has no `depends-on`
 edge of its own is just as "no dependencies" as any leaf Component, so it sorts into the ready

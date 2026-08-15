@@ -7,7 +7,7 @@ one unit of work. Every command below was actually run from the repo root.
 ## Step 1: trust but verify
 
 ```text
-$ npx graphspec validate spec/ --strict
+$ npx graph-spec-cli validate spec/ --strict
 1 file(s) ignored (no type token): AGENTS.md
 
 27 concept(s), 0 error(s), 0 warning(s) [strict]
@@ -21,7 +21,7 @@ vanishing from the graph.
 ## Step 2: check completeness
 
 ```text
-$ npx graphspec coverage spec/
+$ npx graph-spec-cli coverage spec/
 Unsatisfied requirements (no satisfies): 0
 Untested requirements (no covers): 0
 Untested journeys (no covers): 0
@@ -33,7 +33,7 @@ Unresolved relation targets: 0
 0 gap(s)
 ```
 
-No gaps, so nothing blocks this unit of work, and `npx graphspec coverage spec/ --strict` exits
+No gaps, so nothing blocks this unit of work, and `npx graph-spec-cli coverage spec/ --strict` exits
 `0`. Run this *before* you start, not after: a non-zero count under `Untested requirements` for a
 Requirement you are about to implement means the spec never said how to prove it works, and you
 want to know that before writing code, not while trying to verify it. Each category lists the
@@ -42,7 +42,7 @@ offending concept IDs, so a gap points straight at the file to fix.
 ## Step 3: get the build order
 
 ```text
-$ npx graphspec order spec/
+$ npx graph-spec-cli order spec/
 1. architecture/graphspec-cli.system
 2. architecture/parser.component
 3. architecture/graph-model.component
@@ -65,7 +65,7 @@ relations:
 ## Step 4: pull the targeted subgraph
 
 ```text
-$ npx graphspec graph spec/ --from architecture/validator.component --rel exposes,uses,satisfies,constrains --depth 1
+$ npx graph-spec-cli graph spec/ --from architecture/validator.component --rel exposes,uses,satisfies,constrains --depth 1
 {
   "nodes": [
     { "id": "architecture/validator.component", "type": "Component", "title": "Validator" },
@@ -104,7 +104,7 @@ asserting it: `specification/zero-format-awareness.constraint.md` declares
 The default `--direction out` still comes back empty on the constrained concept itself:
 
 ```text
-$ npx graphspec graph spec/ --from architecture/graphspec-cli.system --rel constrains --depth 1
+$ npx graph-spec-cli graph spec/ --from architecture/graphspec-cli.system --rel constrains --depth 1
 {
   "nodes": [
     { "id": "architecture/graphspec-cli.system", "type": "System", "title": "graphspec CLI" }
@@ -118,7 +118,7 @@ originates at the Constraint, not at the System. Adding `--direction in` walks t
 backward and finds it:
 
 ```text
-$ npx graphspec graph spec/ --from architecture/graphspec-cli.system --rel constrains --depth 1 --direction in
+$ npx graph-spec-cli graph spec/ --from architecture/graphspec-cli.system --rel constrains --depth 1 --direction in
 {
   "nodes": [
     { "id": "architecture/graphspec-cli.system", "type": "System", "title": "graphspec CLI" },
@@ -135,7 +135,7 @@ has no Constraint targeting it — this time a trustworthy empty result, not a b
 negative from the wrong default direction:
 
 ```text
-$ npx graphspec graph spec/ --from architecture/validator.component --rel constrains --depth 1 --direction in
+$ npx graph-spec-cli graph spec/ --from architecture/validator.component --rel constrains --depth 1 --direction in
 {
   "nodes": [
     { "id": "architecture/validator.component", "type": "Component", "title": "Validator" }
@@ -154,7 +154,7 @@ works, but `--direction in` is now the direct way to ask the question.)*
 validator.component needs `--direction in` too:
 
 ```text
-$ npx graphspec graph spec/ --from architecture/validator.component --rel covers --depth 1 --direction in
+$ npx graph-spec-cli graph spec/ --from architecture/validator.component --rel covers --depth 1 --direction in
 {
   "nodes": [
     { "id": "architecture/validator.component", "type": "Component", "title": "Validator" },
@@ -192,8 +192,8 @@ makes the coverage report lie, which is worse than a reported gap.
 ## Step 6: after implementing
 
 ```text
-$ npx graphspec coverage spec/       # re-run after closing a gap; totalGaps should drop
-$ npx graphspec validate spec/ --strict   # must still report 0 errors, 0 warnings
+$ npx graph-spec-cli coverage spec/       # re-run after closing a gap; totalGaps should drop
+$ npx graph-spec-cli validate spec/ --strict   # must still report 0 errors, 0 warnings
 ```
 
 Both must be checked — the second confirms the implementation work didn't drift the bundle

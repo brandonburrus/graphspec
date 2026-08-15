@@ -20,8 +20,9 @@ Component/System you're building right now — its Contracts, DataModels, Requir
 Constraints, and covering TestScenarios — instead of loading the entire bundle into context for
 every change.
 
-Always invoke the CLI as `npx graphspec …`. It needs no prior install and resolves a local
-checkout's build when one is present, so the same command works everywhere.
+Always invoke the CLI as `npx graph-spec-cli …` — that is the npm package name, and it needs no
+prior install. The installed binary is named `graphspec`, so `graphspec …` also works wherever
+the package is already installed or on PATH.
 
 ## Workflow
 
@@ -42,7 +43,7 @@ Spec-Driven Build Progress:
 Before reading anything else, confirm the bundle is actually sound:
 
 ```bash
-npx graphspec validate <path> --strict
+npx graph-spec-cli validate <path> --strict
 ```
 
 If this reports errors or warnings, surface them to the user before proceeding — don't silently
@@ -52,13 +53,13 @@ the wrong target type can all mean the graph doesn't mean what it appears to mea
 ### 2. Check completeness
 
 ```bash
-npx graphspec coverage <path>
+npx graph-spec-cli coverage <path>
 ```
 
 This reports, by category: unsatisfied Requirements (nothing `satisfies` them), untested
 Requirements/UserJourneys (nothing `covers` them), empty Features (no `includes`), unrealized
 Features (nothing `realizes` them), dangling Constraints (nothing they `constrain`), orphan
-concepts, and unresolved relation targets. `npx graphspec coverage <path> --strict` exits non-zero if
+concepts, and unresolved relation targets. `npx graph-spec-cli coverage <path> --strict` exits non-zero if
 any gap exists at all — useful as a CI gate, less useful mid-build since real bundles commonly
 have some gaps in flight.
 
@@ -69,7 +70,7 @@ exactly what you're about to implement, or it might be scoped for later.
 ### 3. Get the build order
 
 ```bash
-npx graphspec order <path>
+npx graph-spec-cli order <path>
 ```
 
 This is the topological order of `System`/`Component` concepts from their `depends-on` edges —
@@ -84,7 +85,7 @@ whole bundle per unit of work. Its outgoing relations (`exposes`, `uses`, `satis
 `depends-on`) are the default `--direction out` walk:
 
 ```bash
-npx graphspec graph <path> --from <component-id> --rel exposes,uses,satisfies --depth 1 --format json
+npx graph-spec-cli graph <path> --from <component-id> --rel exposes,uses,satisfies --depth 1 --format json
 ```
 
 This surfaces its Contracts (`exposes`), DataModels/Contracts (`uses`), and Requirements
@@ -97,7 +98,7 @@ nothing for them even when a real edge exists. Pull those with `--direction in` 
 walks the edge backward:
 
 ```bash
-npx graphspec graph <path> --from <component-id> --rel constrains --direction in --depth 1
+npx graph-spec-cli graph <path> --from <component-id> --rel constrains --direction in --depth 1
 ```
 
 See `references/traversal.md` for the full relation-direction table and a verified example
@@ -110,13 +111,13 @@ Before or while implementing, find the TestScenarios that cover this unit of wor
 them into real automated tests (TDD-friendly: red before green):
 
 ```bash
-npx graphspec graph <path> --from <component-id> --rel covers --direction in --depth 1
+npx graph-spec-cli graph <path> --from <component-id> --rel covers --direction in --depth 1
 ```
 
 `covers` also originates at the annotator (the TestScenario), so this needs `--direction in` —
 each other node in the result is a covering TestScenario id. Read its `level`
 (unit/integration/e2e) and its `# Given/When/Then` body, and write the corresponding real test
-before or alongside the implementation. `npx graphspec query <path> --type TestScenario --json` lists
+before or alongside the implementation. `npx graph-spec-cli query <path> --type TestScenario --json` lists
 every TestScenario's id/title/description if you want the full inventory first — note it does
 **not** include `relations`, so confirming which one covers your unit still needs the `graph
 --rel covers --direction in` step above (or opening the file directly).
@@ -126,8 +127,8 @@ every TestScenario's id/title/description if you want the full inventory first �
 Re-run both checks to confirm the targeted gap actually closed and nothing regressed:
 
 ```bash
-npx graphspec coverage <path>       # the gap you targeted should be gone
-npx graphspec validate <path> --strict   # must still be clean
+npx graph-spec-cli coverage <path>       # the gap you targeted should be gone
+npx graph-spec-cli validate <path> --strict   # must still be clean
 ```
 
 If you added a Requirement/Component/relation while implementing, this is also when a drifted

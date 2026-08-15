@@ -17,12 +17,13 @@ description: >-
 ## Purpose
 
 Turn a product or engineering intent into a valid graphspec bundle: a directory of OKF markdown
-concepts, cross-linked by typed `relations:` frontmatter, that passes `npx graphspec validate --strict`
+concepts, cross-linked by typed `relations:` frontmatter, that passes `npx graph-spec-cli validate --strict`
 clean. The graphspec vocabulary is closed — 13 node types, 16 typed relations — so authoring means
 mapping the intent onto that vocabulary, never extending it.
 
-Always invoke the CLI as `npx graphspec …`. It needs no prior install and resolves a local
-checkout's build when one is present, so the same command works everywhere.
+Always invoke the CLI as `npx graph-spec-cli …` — that is the npm package name, and it needs no
+prior install. The installed binary is named `graphspec`, so `graphspec …` also works wherever
+the package is already installed or on PATH.
 
 ## Workflow
 
@@ -70,7 +71,7 @@ Pick only from the 13 types below (full required-field and section detail in
 | Glossary | Term |
 
 Do not invent a new type or a new relation name — the vocabulary is closed by design so
-`npx graphspec validate` can check it mechanically. A typical unit of work is small: a Feature plus
+`npx graph-spec-cli validate` can check it mechanically. A typical unit of work is small: a Feature plus
 the Requirement(s) it includes, or a Component plus the Requirement(s) it satisfies and the
 Contract/DataModel it uses. Don't manufacture personas, journeys, or decisions the intent
 doesn't call for.
@@ -107,7 +108,7 @@ relations:
 Only use a relation name / source type / target type combination that's in the vocabulary (full
 source→target table in `references/profile.md`) — e.g. `includes` only goes Feature →
 Requirement, `satisfies` only goes Component/System → Requirement. Prose markdown links in the
-body are fine for human narrative, but `relations:` is what `npx graphspec graph`, `coverage`, and
+body are fine for human narrative, but `relations:` is what `npx graph-spec-cli graph`, `coverage`, and
 `order` actually traverse — a concept only participates in the graph through its frontmatter
 relations, not through prose links.
 
@@ -120,7 +121,7 @@ leave typos in targets you DO expect to resolve.
 Run validate after every concept or two, not just at the end:
 
 ```bash
-npx graphspec validate <path>
+npx graph-spec-cli validate <path>
 ```
 
 This reports both OKF conformance errors and graphspec profile warnings together. Fix OKF hard
@@ -130,7 +131,7 @@ field, invalid enum value, unknown relation, wrong source/target type). When a d
 obvious from the text, `--json` gives the structured `rule` / `file` / `conceptId`:
 
 ```bash
-npx graphspec validate <path> --json
+npx graph-spec-cli validate <path> --json
 ```
 
 Before declaring the bundle done, run strict mode — this is the real bar, since it promotes
@@ -138,13 +139,13 @@ every profile warning to an error **except** unresolved relation targets (those 
 even under `--strict`, honoring reference-first authoring):
 
 ```bash
-npx graphspec validate <path> --strict     # must exit 0 before you're done
+npx graph-spec-cli validate <path> --strict     # must exit 0 before you're done
 ```
 
 ### 6. Regenerate the index
 
 ```bash
-npx graphspec index <path> --log "<what you added>"
+npx graph-spec-cli index <path> --log "<what you added>"
 ```
 
 This rewrites every directory's `index.md` (concepts grouped by type, using each concept's title
@@ -156,8 +157,8 @@ preview which files would change without writing, or `--no-index` to append only
 Confirm the new concepts actually registered as expected:
 
 ```bash
-npx graphspec query <path> --type Requirement
-npx graphspec query <path> --type Feature --json
+npx graph-spec-cli query <path> --type Requirement
+npx graph-spec-cli query <path> --type Feature --json
 ```
 
 If a concept you just wrote is missing or shows the wrong type, re-check its filename token

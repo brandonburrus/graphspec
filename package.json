@@ -1,7 +1,7 @@
 {
-  "name": "graphspec",
+  "name": "graph-spec-cli",
   "version": "0.1.0",
-  "description": "A CLI + library for spec-driven development: author software specs as an OKF knowledge graph and build software by traversing it.",
+  "description": "GraphSpec: a CLI + library for spec-driven development: author software specs as an OKF knowledge graph and build software by traversing it.",
   "type": "module",
   "license": "MIT",
   "author": "brandonburrus",
