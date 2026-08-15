@@ -6,10 +6,16 @@
  * override. A color defined in only one of the two breaks the other mode, so every token
  * appears in both blocks.
  *
- * The four layer colors are the categorical palette. Three validated hues plus a neutral for
- * the glossary layer: see `palette.ts` for why the fourth slot is deliberately not a hue.
+ * Color is a composite encoding: one hue family per profile layer, one ordinal step per node
+ * type within it, and a shape per layer on top. Each `--gs-ramp-<layer>-<n>` scale was
+ * validated as an ordinal ramp in both modes (monotone lightness, visible adjacent gaps, light
+ * end still readable against the surface). See `palette.ts` for the reasoning and the numbers.
+ *
+ * Step 0 is the highest-contrast step against that mode's surface, which is why the light and
+ * dark ramps run in opposite directions.
+ *
  * Canvas cannot read CSS, so `palette.ts` reads these back through getComputedStyle; renaming
- * a `--gs-layer-*` token there and here must stay in step.
+ * a token there and here must stay in step.
  */
 
 :root {
@@ -22,10 +28,38 @@
   --gs-accent: #0b5cad;
   --gs-accent-soft: #dceafb;
 
-  --gs-layer-product: #eb6834;
-  --gs-layer-architecture: #2a78d6;
-  --gs-layer-specification: #1baf7a;
-  --gs-layer-glossary: #67748a;
+  --gs-ramp-product-0: #b84a12;
+  --gs-ramp-product-1: #e5651f;
+  --gs-ramp-product-2: #ef8a5a;
+  --gs-ramp-product-3: #f3a483;
+  --gs-ramp-product-4: #f6bda6;
+  --gs-ramp-product-5: #f9d3c4;
+
+  --gs-ramp-architecture-0: #164784;
+  --gs-ramp-architecture-1: #1f5fae;
+  --gs-ramp-architecture-2: #2a78d6;
+  --gs-ramp-architecture-3: #4a8ee0;
+  --gs-ramp-architecture-4: #7ab0ef;
+  --gs-ramp-architecture-5: #a4c9f5;
+
+  --gs-ramp-specification-0: #0b5a3f;
+  --gs-ramp-specification-1: #137a56;
+  --gs-ramp-specification-2: #1aa87a;
+  --gs-ramp-specification-3: #47c294;
+  --gs-ramp-specification-4: #74d4b0;
+  --gs-ramp-specification-5: #9ee2c8;
+
+  --gs-ramp-glossary-0: #64748b;
+  --gs-ramp-glossary-1: #7c8a9f;
+  --gs-ramp-glossary-2: #94a0b2;
+  --gs-ramp-glossary-3: #a9b3c2;
+  --gs-ramp-glossary-4: #bec6d2;
+  --gs-ramp-glossary-5: #d2d8e1;
+
+  --gs-layer-product: var(--gs-ramp-product-1);
+  --gs-layer-architecture: var(--gs-ramp-architecture-2);
+  --gs-layer-specification: var(--gs-ramp-specification-2);
+  --gs-layer-glossary: var(--gs-ramp-glossary-0);
   --gs-node-unknown: #8894a5;
   --gs-node-ghost: #8894a5;
 
@@ -35,6 +69,7 @@
   --gs-status-warning: #8a5a00;
 
   --gs-radius: 6px;
+  --gs-ease: cubic-bezier(0.25, 1, 0.5, 1);
   --gs-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   --gs-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   color-scheme: light;
@@ -51,10 +86,38 @@
     --gs-accent: #58a6ff;
     --gs-accent-soft: #10243d;
 
-    --gs-layer-product: #d95926;
-    --gs-layer-architecture: #3987e5;
-    --gs-layer-specification: #199e70;
-    --gs-layer-glossary: #7c8a9c;
+    --gs-ramp-product-0: #f2a077;
+    --gs-ramp-product-1: #e0743d;
+    --gs-ramp-product-2: #c25a22;
+    --gs-ramp-product-3: #a4491a;
+    --gs-ramp-product-4: #863913;
+    --gs-ramp-product-5: #6a2c0e;
+
+    --gs-ramp-architecture-0: #a9cdf7;
+    --gs-ramp-architecture-1: #79aef0;
+    --gs-ramp-architecture-2: #4b8fe6;
+    --gs-ramp-architecture-3: #2f74c9;
+    --gs-ramp-architecture-4: #2159a1;
+    --gs-ramp-architecture-5: #17427b;
+
+    --gs-ramp-specification-0: #7fd9b7;
+    --gs-ramp-specification-1: #3fc194;
+    --gs-ramp-specification-2: #1f9e74;
+    --gs-ramp-specification-3: #157a58;
+    --gs-ramp-specification-4: #0f5c42;
+    --gs-ramp-specification-5: #0a442f;
+
+    --gs-ramp-glossary-0: #a9b3c2;
+    --gs-ramp-glossary-1: #94a0b2;
+    --gs-ramp-glossary-2: #7c8a9f;
+    --gs-ramp-glossary-3: #66748a;
+    --gs-ramp-glossary-4: #525f73;
+    --gs-ramp-glossary-5: #414c5d;
+
+    --gs-layer-product: var(--gs-ramp-product-1);
+    --gs-layer-architecture: var(--gs-ramp-architecture-2);
+    --gs-layer-specification: var(--gs-ramp-specification-2);
+    --gs-layer-glossary: var(--gs-ramp-glossary-0);
     --gs-node-unknown: #6b7889;
     --gs-node-ghost: #6b7889;
 
@@ -90,7 +153,7 @@ body {
 
 .gs-layout {
   display: grid;
-  grid-template-columns: 296px minmax(0, 1fr) 388px;
+  grid-template-columns: 272px minmax(0, 1fr) 380px;
 }
 
 .gs-sidebar,
@@ -215,6 +278,10 @@ summary:focus-visible {
   cursor: pointer;
 }
 
+.gs-result {
+  transition: background-color 120ms var(--gs-ease);
+}
+
 .gs-result:hover,
 .gs-result-hover {
   background: var(--gs-bg-sunken);
@@ -237,12 +304,34 @@ summary:focus-visible {
   flex-shrink: 0;
 }
 
+/*
+ * Swatches mirror the canvas exactly: color names the type, shape names the layer. Sizes are
+ * tuned so the four shapes carry the same visual weight, the same way tracePath does on canvas.
+ */
 .gs-dot {
   width: 9px;
   height: 9px;
   border-radius: 50%;
   flex-shrink: 0;
   display: inline-block;
+}
+
+.gs-dot--square {
+  border-radius: 2px;
+}
+
+.gs-dot--diamond {
+  width: 8px;
+  height: 8px;
+  border-radius: 1px;
+  transform: rotate(45deg);
+}
+
+.gs-dot--triangle {
+  width: 10px;
+  height: 9px;
+  border-radius: 0;
+  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
 }
 
 .gs-dot-ghost {
@@ -262,11 +351,15 @@ summary:focus-visible {
 
 .gs-group summary {
   cursor: pointer;
+  padding: 2px 0;
   font-size: 12px;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
   color: var(--gs-ink-muted);
+  transition: color 120ms var(--gs-ease);
+}
+
+.gs-group summary:hover {
+  color: var(--gs-ink);
 }
 
 .gs-chips {
@@ -284,6 +377,8 @@ summary:focus-visible {
   color: var(--gs-ink-muted);
   font: 11px / 1.5 var(--gs-sans);
   cursor: pointer;
+  transition: background-color 120ms var(--gs-ease), border-color 120ms var(--gs-ease), color 120ms
+    var(--gs-ease);
 }
 
 .gs-chip-on {
@@ -340,14 +435,30 @@ summary:focus-visible {
   gap: 5px;
 }
 
+.gs-legend-group {
+  margin-top: 10px;
+}
+
+.gs-legend-layer {
+  margin: 0 0 5px;
+  font-size: 11px;
+  color: var(--gs-ink-muted);
+}
+
 .gs-legend {
   list-style: none;
-  margin: 8px 0 0;
-  padding: 0;
+  margin: 0;
+  padding: 0 0 0 2px;
   display: flex;
   flex-direction: column;
   gap: 5px;
   font-size: 12px;
+}
+
+.gs-legend-meta {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--gs-line);
 }
 
 .gs-legend li {
@@ -356,28 +467,26 @@ summary:focus-visible {
   gap: 8px;
 }
 
+/* A dense one-line summary, not a tile grid: these are five small facts, not five KPIs. */
 .gs-stats {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 4px;
-  margin-top: auto;
-  padding-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  padding-top: 10px;
   border-top: 1px solid var(--gs-line);
+  font-size: 12px;
+  color: var(--gs-ink-muted);
 }
 
 .gs-stat {
-  text-align: center;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
 }
 
 .gs-stat-value {
-  display: block;
-  font: 600 15px / 1.2 var(--gs-mono);
-}
-
-.gs-stat-label {
-  display: block;
-  font-size: 10px;
-  color: var(--gs-ink-muted);
+  font: 600 12px / 1.4 var(--gs-mono);
+  color: var(--gs-ink);
 }
 
 .gs-stat-error .gs-stat-value {
@@ -447,15 +556,14 @@ summary:focus-visible {
 
 .gs-section h3 {
   margin: 0 0 8px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
   color: var(--gs-ink-muted);
 }
 
 .gs-fm {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   font-size: 12px;
 }
@@ -463,9 +571,10 @@ summary:focus-visible {
 .gs-fm th,
 .gs-fm td {
   border-top: 1px solid var(--gs-line);
-  padding: 4px 0;
+  padding: 5px 0;
   text-align: left;
   vertical-align: top;
+  overflow-wrap: anywhere;
 }
 
 .gs-fm th {

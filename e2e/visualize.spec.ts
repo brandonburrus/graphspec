@@ -58,7 +58,35 @@ test("lands with the whole graph, the concept list, and the legend", async ({ pa
   await expect(rows).toHaveCount(conceptCount);
 
   await expect(page.getByText("Select a concept to inspect it.")).toBeVisible();
-  await expect(page.locator(".gs-legend li")).toHaveCount(6);
+});
+
+test("the legend teaches both halves of the encoding: color per type, shape per layer", async ({
+  page,
+}) => {
+  await page.goto(pageUrl);
+  const legend = page.locator(".gs-group", { hasText: "Legend" });
+
+  // One group per profile layer, each naming its own types.
+  await expect(legend.locator(".gs-legend-layer")).toHaveCount(4);
+  for (const layer of ["product", "architecture", "specification", "glossary"]) {
+    await expect(legend.locator(".gs-legend-layer", { hasText: layer })).toBeVisible();
+  }
+  for (const type of ["Feature", "Component", "Requirement", "Term"]) {
+    await expect(legend.locator(".gs-legend li", { hasText: type }).first()).toBeVisible();
+  }
+
+  // Shape is carried by a class, so a colorblind reader has a second channel.
+  await expect(legend.locator(".gs-dot--circle").first()).toBeVisible();
+  await expect(legend.locator(".gs-dot--square").first()).toBeVisible();
+  await expect(legend.locator(".gs-dot--diamond").first()).toBeVisible();
+  await expect(legend.locator(".gs-dot--triangle").first()).toBeVisible();
+
+  // Every type in the graph gets a distinct swatch color.
+  const colors = await legend
+    .locator(".gs-legend:not(.gs-legend-meta) .gs-dot")
+    .evaluateAll((nodes) => nodes.map((n) => getComputedStyle(n).backgroundColor));
+  expect(colors.length).toBe(13);
+  expect(new Set(colors).size).toBe(13);
 });
 
 test("search narrows the list and the keyboard shortcut focuses it", async ({ page }) => {

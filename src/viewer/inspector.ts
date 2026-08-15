@@ -11,7 +11,7 @@ import type { PayloadEdge } from "../visualize/payload.js";
 import { clear, el } from "./dom.js";
 import { renderMarkdown } from "./markdown.js";
 import { type AnyNode, isConcept, titleOf } from "./nodes.js";
-import { layerVar } from "./palette.js";
+import { rampIndexes, rampVar, shapeForLayer } from "./palette.js";
 import type { ViewerState } from "./state.js";
 
 /** Callbacks into the app shell. */
@@ -105,10 +105,16 @@ export class Inspector {
     }
     const parts: HTMLElement[] = [];
     const layer = this.state.layerOf(node);
+    const step = rampIndexes(this.state.payload.profile.nodeTypes).get(node.type ?? "");
+    const color = step === undefined ? "var(--gs-node-unknown)" : `var(${rampVar(layer, step)})`;
 
     const head = el("header", { class: "gs-inspect-head" }, [
-      el("p", { class: "gs-badge", style: `--badge:var(${layerVar(layer)})` }, [
-        el("span", { class: "gs-dot", style: `background:var(${layerVar(layer)})` }),
+      el("p", { class: "gs-badge" }, [
+        el("span", {
+          class: `gs-dot gs-dot--${shapeForLayer(layer)}`,
+          style: `background:${color}`,
+          "aria-hidden": "true",
+        }),
         el("span", { text: node.type ?? "untyped" }),
       ]),
       el("h2", { text: titleOf(node) }),
@@ -182,13 +188,26 @@ export class Inspector {
     return this.section("Problems", el("ul", { class: "gs-problems" }, items));
   }
 
-  /** Every frontmatter key in file order, so custom keys are as visible as profile ones. */
+  /**
+   * Every frontmatter key in file order, so a key the profile has never heard of is as visible
+   * as one it defines.
+   *
+   * The three keys this panel already renders in full elsewhere are left out: `title` is the
+   * heading, `description` sits under it, and `relations` is the Relations section. Repeating
+   * `relations` here meant a wall of unreadable JSON next to the readable version of the same
+   * thing.
+   */
   private frontmatterTable(frontmatter: Record<string, unknown>): HTMLElement {
-    const rows = Object.entries(frontmatter).map(([key, value]) =>
-      el("tr", {}, [el("th", { scope: "row", text: key }), el("td", { text: formatValue(value) })]),
-    );
+    const rows = Object.entries(frontmatter)
+      .filter(([key]) => !RENDERED_ELSEWHERE.has(key))
+      .map(([key, value]) =>
+        el("tr", {}, [
+          el("th", { scope: "row", text: key }),
+          el("td", { text: formatValue(value) }),
+        ]),
+      );
     if (rows.length === 0) {
-      return el("p", { class: "gs-empty", text: "No frontmatter." });
+      return el("p", { class: "gs-empty", text: "No other frontmatter keys." });
     }
     return el("table", { class: "gs-fm" }, [el("tbody", {}, rows)]);
   }
@@ -279,6 +298,9 @@ export class Inspector {
     return this.state.node(candidate) ? candidate : null;
   }
 }
+
+/** Frontmatter keys the panel renders properly in its own sections. */
+const RENDERED_ELSEWHERE = new Set(["title", "description", "relations"]);
 
 /** Render a frontmatter value compactly: scalars as-is, structures as JSON. */
 function formatValue(value: unknown): string {

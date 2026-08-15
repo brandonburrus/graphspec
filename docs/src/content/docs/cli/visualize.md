@@ -29,7 +29,7 @@ npx graph-spec-cli visualize spec/ --out spec-graph.html --open
 ```
 
 ```
-wrote /work/spec-graph.html (33 concept(s), 55 relation(s), 108.4 KB)
+wrote /private/tmp/spec-graph.html (33 concept(s), 60 relation(s), 112.3 KB)
 ```
 
 ## One file, no network
@@ -43,15 +43,25 @@ large enough for that to matter gets a note on stderr.
 
 ## Reading the graph
 
-Nodes are colored by profile **layer**, not by type: product, architecture, specification, and
-glossary. Thirteen colors is more than anyone can hold; four groups is legible, and the layer
-is the distinction that carries meaning. Node size tracks how many relations a concept has.
+Every node type has its own color, and every profile layer its own shape. The two work
+together: thirteen colors alone is more than anyone can tell apart, so the shape narrows it to
+at most five, and the color names the type within that group.
+
+| Shape | Layer | Types |
+| --- | --- | --- |
+| Circle | product | UserPersona, UserJourney, Feature |
+| Square | architecture | System, Component, Integration, Contract, DataModel |
+| Diamond | specification | Requirement, Constraint, Decision, TestScenario |
+| Triangle | glossary | Term |
+
+The legend in the left rail lists all thirteen. Node size tracks how many relations a concept
+has.
 
 | Signal | Meaning |
 | --- | --- |
-| Solid colored node | A concept, colored by its layer |
 | Dashed hollow node | A relation target with no file yet. See below |
 | Red ring | The concept has a validation error |
+| Thin ring | You parked this node by dragging it |
 | Dashed edge | An implicit directory parent-to-child edge |
 | Arrowhead | The direction the relation points |
 
@@ -85,7 +95,7 @@ npx graph-spec-cli visualize serve spec/
 ```
 
 ```
-serving spec/ at http://localhost:3737/
+serving spec at http://localhost:3737/
 watching for changes; press Ctrl-C to stop
 ```
 
@@ -116,3 +126,7 @@ the bundle could not be read or the file could not be written.
 The graph is a canvas, which assistive technology cannot navigate. The concept list in the
 left rail is the equivalent surface: every concept in the bundle is a real focusable button
 there, selection is announced, and every control is reachable by keyboard.
+
+Color is never the only channel. Each node's shape carries its layer, every list row and
+legend entry is labeled with its type in text, and the color ramps were checked for
+colorblind separation against both the light and dark backgrounds.

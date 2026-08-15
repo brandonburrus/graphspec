@@ -24,7 +24,7 @@ import {
 } from "d3-force";
 import type { PayloadEdge } from "../visualize/payload.js";
 import { type AnyNode, isConcept, titleOf } from "./nodes.js";
-import { type CanvasColors, readCanvasColors } from "./palette.js";
+import { type CanvasColors, type NodeShape, readCanvasColors, shapeForLayer } from "./palette.js";
 import type { ViewerState } from "./state.js";
 
 /** A node in the simulation. d3-force mutates `x`/`y`/`vx`/`vy` in place. */
@@ -87,7 +87,7 @@ export class GraphCanvas {
       throw new Error("viewer: canvas 2d context unavailable");
     }
     this.context = context;
-    this.colors = readCanvasColors(document.documentElement, state.payload.profile.layers);
+    this.colors = readCanvasColors(document.documentElement, state.payload.profile.nodeTypes);
 
     this.simulation = forceSimulation<SimNode, SimLink>([])
       .force("charge", forceManyBody<SimNode>().strength(-260).distanceMax(900))
@@ -201,7 +201,7 @@ export class GraphCanvas {
         continue;
       }
       const lit = emphasis === null ? false : emphasis.has(source.id) && emphasis.has(target.id);
-      context.globalAlpha = emphasis === null ? 0.55 : lit ? 0.95 : 0.08;
+      context.globalAlpha = emphasis === null ? 0.55 : lit ? 0.95 : 0.14;
       context.strokeStyle = lit ? colors.edgeStrong : colors.edge;
       context.setLineDash(link.edge.structural ? [4 / this.camera.k, 4 / this.camera.k] : []);
 
@@ -261,11 +261,14 @@ export class GraphCanvas {
       const x = sim.x ?? 0;
       const y = sim.y ?? 0;
       const lit = emphasis === null || emphasis.has(sim.id);
-      context.globalAlpha = lit ? 1 : 0.12;
+      // Dimmed, not erased: the surrounding graph is the context that makes a
+      // highlighted neighborhood mean something.
+      context.globalAlpha = lit ? 1 : 0.22;
 
       const ghost = !isConcept(sim.node);
+      const shape = ghost ? "circle" : shapeForLayer(this.state.layerOf(sim.node));
       context.beginPath();
-      context.arc(x, y, sim.radius, 0, Math.PI * 2);
+      tracePath(context, shape, x, y, sim.radius);
 
       if (ghost) {
         // Hollow with a dashed ring: a reference-first target that has no file yet reads as
@@ -317,8 +320,11 @@ export class GraphCanvas {
   }
 
   private colorFor(sim: SimNode): string {
-    const layer = this.state.layerOf(sim.node);
-    return this.colors.layer[layer] ?? this.colors.unknown;
+    const node = sim.node;
+    if (!isConcept(node) || node.type === null) {
+      return this.colors.unknown;
+    }
+    return this.colors.type[node.type] ?? this.colors.unknown;
   }
 
   /** Center and scale the camera so every node is on screen. */
@@ -379,7 +385,7 @@ export class GraphCanvas {
 
   /** Re-read theme colors, e.g. after the OS switches between light and dark. */
   refreshColors(): void {
-    this.colors = readCanvasColors(document.documentElement, this.state.payload.profile.layers);
+    this.colors = readCanvasColors(document.documentElement, this.state.payload.profile.nodeTypes);
     this.draw();
   }
 
@@ -523,6 +529,46 @@ export class GraphCanvas {
       }
     }
     return null;
+  }
+}
+
+/**
+ * Trace a node outline. Sizes are tuned so the four shapes read as the same visual weight at
+ * the same radius; a square inscribed in a circle looks noticeably smaller than one drawn to
+ * the same half-width, and a triangle smaller still.
+ */
+function tracePath(
+  context: CanvasRenderingContext2D,
+  shape: NodeShape,
+  x: number,
+  y: number,
+  radius: number,
+): void {
+  switch (shape) {
+    case "square": {
+      const half = radius * 0.86;
+      context.roundRect(x - half, y - half, half * 2, half * 2, Math.max(1, radius * 0.18));
+      break;
+    }
+    case "diamond": {
+      const reach = radius * 1.22;
+      context.moveTo(x, y - reach);
+      context.lineTo(x + reach, y);
+      context.lineTo(x, y + reach);
+      context.lineTo(x - reach, y);
+      context.closePath();
+      break;
+    }
+    case "triangle": {
+      const reach = radius * 1.28;
+      context.moveTo(x, y - reach);
+      context.lineTo(x + reach * 0.866, y + reach * 0.5);
+      context.lineTo(x - reach * 0.866, y + reach * 0.5);
+      context.closePath();
+      break;
+    }
+    default:
+      context.arc(x, y, radius, 0, Math.PI * 2);
   }
 }
 

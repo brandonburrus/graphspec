@@ -9,7 +9,7 @@
 
 import { clear, el } from "./dom.js";
 import { type AnyNode, isConcept, titleOf } from "./nodes.js";
-import { layerVar } from "./palette.js";
+import { rampIndexes, rampVar, shapeForLayer } from "./palette.js";
 import type { ViewerState } from "./state.js";
 
 /** Callbacks into the app shell. */
@@ -51,6 +51,8 @@ export class Sidebar {
   private lastFocusKey = "";
   private readonly rowsById = new Map<string, HTMLElement>();
   private readonly groupOpen = new Map<string, boolean>();
+  /** Type name to ramp step, recomputed only when the payload changes. */
+  private rampIndex = new Map<string, number>();
 
   constructor(
     root: HTMLElement,
@@ -72,6 +74,7 @@ export class Sidebar {
 
     this.resultsCount = el("p", { class: "gs-results-count", role: "status" });
     this.resultsList = el("ul", { class: "gs-results", "aria-label": "Concepts" });
+    this.rampIndex = rampIndexes(state.payload.profile.nodeTypes);
     this.filtersHost = el("div", { class: "gs-filters" });
     this.focusHost = el("div", { class: "gs-focus" });
     this.statsHost = el("div", { class: "gs-stats" });
@@ -97,6 +100,9 @@ export class Sidebar {
       this.searchInput.value = this.state.query;
     }
     const payloadChanged = this.lastPayload !== this.state.payload;
+    if (payloadChanged) {
+      this.rampIndex = rampIndexes(this.state.payload.profile.nodeTypes);
+    }
     const focusKey =
       this.state.focus === null ? "" : `${this.state.focus.id}:${this.state.focus.depth}`;
 
@@ -203,11 +209,7 @@ export class Sidebar {
     const button = el("button", { type: "button", class: "gs-result" });
     this.rowsById.set(node.id, button);
     button.append(
-      el("span", {
-        class: "gs-dot",
-        style: `background:var(${layerVar(this.state.layerOf(node))})`,
-        "aria-hidden": "true",
-      }),
+      this.swatch(node),
       el("span", { class: "gs-result-title", text: titleOf(node) }),
       el("span", {
         class: "gs-result-type",
@@ -342,7 +344,7 @@ export class Sidebar {
 
   private optionsGroup(): HTMLElement {
     const { filters } = this.state;
-    const details = this.group("Display", true);
+    const details = this.group("Display", false);
     details.append(
       el("div", { class: "gs-toggles" }, [
         this.toggle("Directory structure edges", filters.showStructural, (on) => {
@@ -363,30 +365,70 @@ export class Sidebar {
     return details;
   }
 
+  /**
+   * The legend, grouped by layer.
+   *
+   * Grouping is not cosmetic: the encoding is composite, so the legend has to teach both
+   * halves of it. Shape names the layer, and the color steps within that shape name the type.
+   */
   private legend(): HTMLElement {
     const details = this.group("Legend", true);
-    const rows = this.state.payload.profile.layers.map((layer) =>
-      el("li", {}, [
-        el("span", {
-          class: "gs-dot",
-          style: `background:var(${layerVar(layer)})`,
-          "aria-hidden": "true",
-        }),
-        el("span", { text: layer }),
+    const blocks: HTMLElement[] = [];
+
+    for (const layer of this.state.payload.profile.layers) {
+      const types = this.state.payload.profile.nodeTypes.filter((t) => t.layer === layer);
+      if (types.length === 0) {
+        continue;
+      }
+      blocks.push(
+        el("div", { class: "gs-legend-group" }, [
+          el("p", { class: "gs-legend-layer", text: layer }),
+          el(
+            "ul",
+            { class: "gs-legend" },
+            types.map((type) =>
+              el("li", { title: type.description }, [
+                this.typeDot(type.name, layer),
+                el("span", { text: type.name }),
+              ]),
+            ),
+          ),
+        ]),
+      );
+    }
+
+    blocks.push(
+      el("ul", { class: "gs-legend gs-legend-meta" }, [
+        el("li", {}, [
+          el("span", { class: "gs-dot gs-dot-ghost", "aria-hidden": "true" }),
+          el("span", { text: "not written yet" }),
+        ]),
+        el("li", {}, [
+          el("span", { class: "gs-dot gs-dot-error", "aria-hidden": "true" }),
+          el("span", { text: "has an error" }),
+        ]),
       ]),
     );
-    rows.push(
-      el("li", {}, [
-        el("span", { class: "gs-dot gs-dot-ghost", "aria-hidden": "true" }),
-        el("span", { text: "not yet written" }),
-      ]),
-      el("li", {}, [
-        el("span", { class: "gs-dot gs-dot-error", "aria-hidden": "true" }),
-        el("span", { text: "has an error" }),
-      ]),
-    );
-    details.append(el("ul", { class: "gs-legend" }, rows));
+    details.append(...blocks);
     return details;
+  }
+
+  /** The swatch for a node: its type's color, in its layer's shape. */
+  private swatch(node: AnyNode): HTMLElement {
+    if (!isConcept(node) || node.type === null) {
+      return el("span", { class: "gs-dot gs-dot-ghost", "aria-hidden": "true" });
+    }
+    return this.typeDot(node.type, this.state.layerOf(node));
+  }
+
+  private typeDot(typeName: string, layer: string): HTMLElement {
+    const step = this.rampIndex.get(typeName);
+    const color = step === undefined ? "var(--gs-node-unknown)" : `var(${rampVar(layer, step)})`;
+    return el("span", {
+      class: `gs-dot gs-dot--${shapeForLayer(layer)}`,
+      style: `background:${color}`,
+      "aria-hidden": "true",
+    });
   }
 
   private renderStats(): void {

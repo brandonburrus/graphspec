@@ -28,7 +28,7 @@ npm run typecheck      # both tsconfigs, including this one
 | `inspector.ts` | The concept detail panel. |
 | `markdown.ts` | Escape-first markdown subset renderer. |
 | `search.ts` | Weighted substring scoring. |
-| `palette.ts` | Layer colors, read back out of CSS. |
+| `palette.ts` | Type colors and layer shapes, read back out of CSS. |
 | `nodes.ts` | The node union, shared by `state` and `search` so they need not import each other. |
 | `dom.ts` | `el`/`clear`/`must`. |
 
@@ -41,13 +41,20 @@ npm run typecheck      # both tsconfigs, including this one
   testing are a camera transform and a distance check. Do not add d3-zoom or d3-selection to
   re-implement fifty lines against the DOM; every kilobyte here is added to every
   visualization anyone generates.
-- **Color is by profile layer, never by node type.** Thirteen categorical hues is more than a
-  reader can distinguish. The three hues plus a neutral were validated for all-pairs
-  colorblind separation against both the light and dark canvas surfaces; the glossary layer
-  takes the neutral because no fourth hue cleared the floors in both modes. The reasoning and
-  the numbers are in the `palette.ts` header. Do not add a fourth hue without re-validating.
+- **The encoding is composite: color per node type, shape per layer.** Thirteen free hues is
+  more than a reader can distinguish, so each layer is one hue family and each type an ordinal
+  step within it, with the layer's shape separating the families. Color therefore only has to
+  discriminate inside a shape group, which is at most five types. Every ramp was validated as
+  an ordinal scale in both modes; the reasoning and the numbers are in the `palette.ts` header.
+  Re-validate before changing a ramp, and give any new layer both a hue family in `viewer.css`
+  and a shape in `LAYER_SHAPES`.
+- **The viewer never hardcodes the 13 types.** A type's ramp step is its position among its
+  own layer's types in profile declaration order, computed from the payload. That is what lets
+  `src/profile/` stay the only place the vocabulary lives.
+- **Swatches must mirror the canvas.** The list, legend, and inspector badge all use the same
+  color and the same shape as the node. If they drift, the legend stops being a legend.
 - **Canvas colors live in `viewer.css`, not in TypeScript.** Canvas cannot read CSS, so
-  `palette.ts` pulls them back via `getComputedStyle`. Renaming a `--gs-layer-*` token means
+  `palette.ts` pulls them back via `getComputedStyle`. Renaming a `--gs-ramp-*` token means
   changing both files.
 - **The sidebar list is the accessibility surface.** A canvas has no accessibility tree, so
   every concept must stay reachable as a real focusable button in the results list, selection
