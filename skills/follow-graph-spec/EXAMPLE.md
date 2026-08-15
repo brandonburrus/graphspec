@@ -7,40 +7,42 @@ one unit of work. Every command below was actually run from the repo root.
 ## Step 1: trust but verify
 
 ```text
-$ graphspec validate spec/ --strict
-25 concept(s), 0 error(s), 0 warning(s) [strict]
+$ npx graphspec validate spec/ --strict
+1 file(s) ignored (no type token): AGENTS.md
+
+27 concept(s), 0 error(s), 0 warning(s) [strict]
 ```
 
-Clean. Safe to proceed.
+Clean. Safe to proceed. The `ignored` line is expected, not a problem: `AGENTS.md` has no
+`.<type-token>` segment, so it is prose living beside the bundle rather than a concept. Read that
+line anyway — a concept that lost its type token in a rename shows up here instead of silently
+vanishing from the graph.
 
 ## Step 2: check completeness
 
 ```text
-$ graphspec coverage spec/
-Unsatisfied requirements (no satisfies): 1
-  - specification/concept-filtering.requirement
-Untested requirements (no covers): 2
-  - specification/profile-checks.requirement
-  - specification/strict-mode.requirement
+$ npx graphspec coverage spec/
+Unsatisfied requirements (no satisfies): 0
+Untested requirements (no covers): 0
 Untested journeys (no covers): 0
 Empty features (no includes): 0
 Unrealized features (no realizes): 0
 Dangling constraints (no constrains): 0
 Orphan concepts (no relations): 0
 Unresolved relation targets: 0
-3 gap(s)
+0 gap(s)
 ```
 
-Real, non-trivial finding: two of the three Requirements that `architecture/validator.component`
-itself satisfies — `profile-checks.requirement` and `strict-mode.requirement` — have no covering
-TestScenario yet. (`okf-conformance.requirement`, the third, *is* covered — see step 5.) That's a
-concrete gap directly relevant to this unit of work, not just abstract bundle hygiene.
-`graphspec coverage spec/ --strict` exits `1` here, confirming the CI-gate behavior.
+No gaps, so nothing blocks this unit of work, and `npx graphspec coverage spec/ --strict` exits
+`0`. Run this *before* you start, not after: a non-zero count under `Untested requirements` for a
+Requirement you are about to implement means the spec never said how to prove it works, and you
+want to know that before writing code, not while trying to verify it. Each category lists the
+offending concept IDs, so a gap points straight at the file to fix.
 
 ## Step 3: get the build order
 
 ```text
-$ graphspec order spec/
+$ npx graphspec order spec/
 1. architecture/graphspec-cli.system
 2. architecture/parser.component
 3. architecture/graph-model.component
@@ -63,7 +65,7 @@ relations:
 ## Step 4: pull the targeted subgraph
 
 ```text
-$ graphspec graph spec/ --from architecture/validator.component --rel exposes,uses,satisfies,constrains --depth 1
+$ npx graphspec graph spec/ --from architecture/validator.component --rel exposes,uses,satisfies,constrains --depth 1
 {
   "nodes": [
     { "id": "architecture/validator.component", "type": "Component", "title": "Validator" },
@@ -102,7 +104,7 @@ asserting it: `specification/zero-format-awareness.constraint.md` declares
 The default `--direction out` still comes back empty on the constrained concept itself:
 
 ```text
-$ graphspec graph spec/ --from architecture/graphspec-cli.system --rel constrains --depth 1
+$ npx graphspec graph spec/ --from architecture/graphspec-cli.system --rel constrains --depth 1
 {
   "nodes": [
     { "id": "architecture/graphspec-cli.system", "type": "System", "title": "graphspec CLI" }
@@ -116,7 +118,7 @@ originates at the Constraint, not at the System. Adding `--direction in` walks t
 backward and finds it:
 
 ```text
-$ graphspec graph spec/ --from architecture/graphspec-cli.system --rel constrains --depth 1 --direction in
+$ npx graphspec graph spec/ --from architecture/graphspec-cli.system --rel constrains --depth 1 --direction in
 {
   "nodes": [
     { "id": "architecture/graphspec-cli.system", "type": "System", "title": "graphspec CLI" },
@@ -133,7 +135,7 @@ has no Constraint targeting it — this time a trustworthy empty result, not a b
 negative from the wrong default direction:
 
 ```text
-$ graphspec graph spec/ --from architecture/validator.component --rel constrains --depth 1 --direction in
+$ npx graphspec graph spec/ --from architecture/validator.component --rel constrains --depth 1 --direction in
 {
   "nodes": [
     { "id": "architecture/validator.component", "type": "Component", "title": "Validator" }
@@ -152,20 +154,23 @@ works, but `--direction in` is now the direct way to ask the question.)*
 validator.component needs `--direction in` too:
 
 ```text
-$ graphspec graph spec/ --from architecture/validator.component --rel covers --depth 1 --direction in
+$ npx graphspec graph spec/ --from architecture/validator.component --rel covers --depth 1 --direction in
 {
   "nodes": [
     { "id": "architecture/validator.component", "type": "Component", "title": "Validator" },
+    { "id": "specification/strict-promotion.test-scenario", "type": "TestScenario", "title": "Strict Promotes Warnings" },
     { "id": "specification/validate-golden.test-scenario", "type": "TestScenario", "title": "Validate Golden Bundle" }
   ],
   "edges": [
+    { "from": "specification/strict-promotion.test-scenario", "to": "architecture/validator.component", "relation": "covers" },
     { "from": "specification/validate-golden.test-scenario", "to": "architecture/validator.component", "relation": "covers" }
   ]
 }
 ```
 
-This surfaces `specification/validate-golden.test-scenario` (`level: integration`) directly — no
-bundle-wide fetch or manual filtering required. Its `# Given/When/Then` body:
+Both covering scenarios surface directly — no bundle-wide fetch or manual filtering required.
+Every one of them is a test you owe. Take `validate-golden.test-scenario` (`level: integration`);
+its `# Given/When/Then` body:
 
 ```markdown
 # Given/When/Then
@@ -175,16 +180,20 @@ bundle-wide fetch or manual filtering required. Its `# Given/When/Then` body:
 - **Then** it reports zero errors and zero warnings and exits 0.
 ```
 
-Port this into a real integration test before/while touching the validator's code. Note the gap
-found in step 2: `profile-checks.requirement` and `strict-mode.requirement` have no covering
-TestScenario at all — a real follow-up would be writing those TestScenario concepts (via
-`create-graph-spec`) and their corresponding tests, then closing the gap.
+Port this into a real integration test before/while touching the validator's code. The `level`
+field tells you which suite it belongs in (`unit`, `integration`, `e2e`), so the spec picks the
+test's altitude, not you.
+
+If step 2 *had* reported one of these Requirements under `Untested requirements`, the fix is not
+to skip it: author the missing TestScenario concept (via `create-graph-spec`), write the matching
+test, then re-run `coverage` to confirm the gap closed. A TestScenario with no real test behind it
+makes the coverage report lie, which is worse than a reported gap.
 
 ## Step 6: after implementing
 
 ```text
-$ graphspec coverage spec/       # re-run after closing a gap; totalGaps should drop
-$ graphspec validate spec/ --strict   # must still report 0 errors, 0 warnings
+$ npx graphspec coverage spec/       # re-run after closing a gap; totalGaps should drop
+$ npx graphspec validate spec/ --strict   # must still report 0 errors, 0 warnings
 ```
 
 Both must be checked — the second confirms the implementation work didn't drift the bundle

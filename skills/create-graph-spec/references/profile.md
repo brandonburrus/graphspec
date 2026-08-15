@@ -2,7 +2,7 @@
 
 The closed vocabulary every graphspec bundle is checked against. Source of truth:
 `src/profile/node-types.ts` and `src/profile/relations.ts` in the graphspec repo. Do not add
-types or relations outside this list — `graphspec validate` only knows these.
+types or relations outside this list — `npx graphspec validate` only knows these.
 
 ## Node types (13)
 
@@ -26,7 +26,7 @@ Filename convention: `<name>.<type-token>.md`. `type` in frontmatter is the Pasc
 
 Every concept also gets OKF's own required field: a non-empty `type`. `title`, `description`,
 and `tags` are recommended on every type (not OKF/profile-enforced, but every concept in this
-repo's own dogfood bundle carries them, and `graphspec index`/`graphspec query` render `title`
+repo's own dogfood bundle carries them, and `npx graphspec index`/`npx graphspec query` render `title`
 and `description` when present).
 
 Enum fields (`status`, `direction`, `level`) are **profile** checks: a wrong or missing value is
@@ -63,8 +63,13 @@ want traversal to work smoothly in both directions for `follow-graph-spec` later
 skill), remember that a Component being constrained or covered doesn't "know" about it in its
 own file — the edge lives only on the Constraint/TestScenario side.
 
-## Validation model (what `graphspec validate` actually checks)
+## Validation model (what `npx graphspec validate` actually checks)
 
+- **What counts as a concept:** only `<name>.<type-token>.md` files. `index.md` and `log.md` are
+  reserved, and every other `.md` (`AGENTS.md`, `README.md`, notes) is ignored, so ordinary prose
+  can sit inside a bundle directory. `validate` reports what it skipped — check that line after
+  renaming a file, because a concept that lost its type token becomes an ignored file rather than
+  a validation error.
 - **OKF conformance (always errors):** parseable YAML frontmatter block; non-empty `type`.
   Unknown types, broken links, and missing optional fields never hard-fail on their own — OKF
   is intentionally permissive so partially-authored bundles stay valid.

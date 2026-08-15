@@ -6,17 +6,25 @@ this repo's own dogfood bundle (`spec/`) and the output shapes below are real, n
 ## Command reference
 
 ```text
-graphspec validate [path] [--strict] [--json]
-graphspec query    [path] [--type <T>] [--tag <t>] [--status <s>] [--json]
-graphspec graph    [path] [--format json|mermaid|dot] [--from <concept-id>] [--depth <n>] [--rel <name[,name...]>] [--direction out|in|both] [--structure]
-graphspec coverage [path] [--json] [--strict]
-graphspec order    [path] [--json]
+npx graphspec validate [path] [--strict] [--json]
+npx graphspec query    [path] [--type <T>] [--tag <t>] [--status <s>] [--json]
+npx graphspec graph    [path] [--format json|mermaid|dot] [--from <concept>] [--depth <n>] [--rel <name[,name...]>] [--direction out|in|both] [--structure]
+npx graphspec coverage [path] [--json] [--strict]
+npx graphspec order    [path] [--json]
 ```
 
 - `path` defaults to `.` on every command.
+- Only `<name>.<type-token>.md` files are concepts. `index.md`/`log.md` are reserved, and any
+  other `.md` (e.g. `AGENTS.md`, `README.md`) is ignored, so prose can live inside a bundle.
+  `validate` prints a `N file(s) ignored (no type token): …` line and a matching `ignored` array
+  in `--json`. Read it: a concept whose rename dropped its type token shows up there rather than
+  silently disappearing from the graph.
 - `graph --format` defaults to `json`: `{ nodes: [{id,type,title}], edges: [{from,to,relation}] }`.
-- `graph --from <id>` errors (exit 2) if `<id>` doesn't resolve to a concept in the bundle:
-  `error: --from concept not found: <id>`.
+- `graph --from` accepts a bare concept ID (`architecture/parser.component`) or the same
+  leading-slash reference form used by `relations:` targets
+  (`/architecture/parser.component.md`) — both resolve to the same concept, so a target copied
+  out of a frontmatter block can be pasted straight in. It errors (exit 2) when it doesn't
+  resolve, echoing what you typed: `error: --from concept not found: <what you passed>`.
 - `graph --rel` errors (exit 2) on an unknown relation name.
 - `graph --direction` accepts `out` (default), `in`, or `both`; any other value errors (exit 2):
   `error: --direction must be one of out, in, both (got '<value>')`. It only affects traversal
@@ -32,7 +40,7 @@ graphspec order    [path] [--json]
 
 ## Traversal direction: `--from` + `--direction`
 
-`graphspec graph --from <id>` does a breadth-first walk bounded by `--depth`, and `--direction`
+`npx graphspec graph --from <id>` does a breadth-first walk bounded by `--depth`, and `--direction`
 controls which way it follows edges at each visited node (default `out`, preserving the
 historical behavior):
 
@@ -58,7 +66,7 @@ The default `--direction out` still returns zero edges here, because the Constra
 System — is the `from` side:
 
 ```text
-$ graphspec graph spec/ --from architecture/graphspec-cli.system --rel constrains --depth 1
+$ npx graphspec graph spec/ --from architecture/graphspec-cli.system --rel constrains --depth 1
 {
   "nodes": [
     { "id": "architecture/graphspec-cli.system", "type": "System", "title": "graphspec CLI" }
@@ -70,7 +78,7 @@ $ graphspec graph spec/ --from architecture/graphspec-cli.system --rel constrain
 Adding `--direction in` walks the same edge backward and finds it:
 
 ```text
-$ graphspec graph spec/ --from architecture/graphspec-cli.system --rel constrains --depth 1 --direction in
+$ npx graphspec graph spec/ --from architecture/graphspec-cli.system --rel constrains --depth 1 --direction in
 {
   "nodes": [
     { "id": "architecture/graphspec-cli.system", "type": "System", "title": "graphspec CLI" },
@@ -113,7 +121,7 @@ graph — but `--direction in` is the direct way to ask "what constrains/covers 
 
 ## `order`'s algorithm, briefly
 
-`graphspec order` is a topological sort (Kahn's algorithm) over `System`/`Component` concepts'
+`npx graphspec order` is a topological sort (Kahn's algorithm) over `System`/`Component` concepts'
 `depends-on` edges only, alphabetical tie-break for determinism. `order` only looks at
 `depends-on` — a System that `contains` every Component in the bundle but has no `depends-on`
 edge of its own is just as "no dependencies" as any leaf Component, so it sorts into the ready
