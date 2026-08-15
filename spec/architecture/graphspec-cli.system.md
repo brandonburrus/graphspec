@@ -16,6 +16,7 @@ relations:
     - /architecture/cli-contract.contract.md
   satisfies:
     - /specification/okf-conformance.requirement.md
+    - /specification/concept-filtering.requirement.md
   refers-to:
     - /glossary/knowledge-bundle.term.md
 ---

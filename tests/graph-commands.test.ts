@@ -218,11 +218,30 @@ describe("coverage command", () => {
     expect(typeof parsed.totalGaps).toBe("number");
   });
 
+  // Anchored on a purpose-built gappy fixture rather than on `spec/`, so that closing a
+  // real gap in the dogfood bundle cannot flip this test's meaning.
   it("exits non-zero under --strict when gaps exist", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "graphspec-coverage-"));
+    try {
+      // A Requirement nothing satisfies and no TestScenario covers: two gaps by construction.
+      await writeFile(
+        join(dir, "login.requirement.md"),
+        "---\ntype: Requirement\ntitle: Login\nstatus: accepted\n---\n",
+        "utf8",
+      );
+      const w = new BufferWriter();
+      const code = await runCoverage(dir, { strict: true }, w);
+      expect(code).toBe(1);
+      expect(w.errText).toContain("gap(s)");
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("exits 0 under --strict when the bundle has no gaps", async () => {
     const w = new BufferWriter();
     const code = await runCoverage("spec", { strict: true }, w);
-    expect(code).toBe(1);
-    expect(w.errText).toContain("gap(s)");
+    expect(code).toBe(0);
   });
 });
 

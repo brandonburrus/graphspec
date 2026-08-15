@@ -214,7 +214,7 @@ It validates clean:
 
 ```bash
 graphspec validate spec/
-# 25 concept(s), 0 error(s), 0 warning(s)
+# 27 concept(s), 0 error(s), 0 warning(s)
 ```
 
 ## Agent Skills

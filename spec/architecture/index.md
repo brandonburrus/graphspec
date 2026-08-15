@@ -11,7 +11,7 @@
 * [OKF Bundle Source](okf-source.integration.md) - The filesystem directory tree a bundle is read from.
 
 # Contracts
-* [CLI Contract](cli-contract.contract.md) - The command-line interface surface: validate, query, and index subcommands.
+* [CLI Contract](cli-contract.contract.md) - The command-line interface surface: validate, query, index, graph, coverage, and order subcommands.
 
 # Data Models
 * [Concept Record](concept.data-model.md) - The parsed representation of one concept document.

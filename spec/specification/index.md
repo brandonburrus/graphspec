@@ -13,5 +13,7 @@
 * [Profile as Data](profile-as-data.decision.md) - Express the graphspec vocabulary as a typed data module, not scattered logic.
 
 # Test Scenarios
+* [Profile Violation Warns](profile-warning.test-scenario.md) - A filename token disagreeing with the frontmatter type is reported as a warning, not an error.
 * [Query Filter By Type](query-filter.test-scenario.md) - Filtering by type returns only concepts of that type.
+* [Strict Promotes Warnings](strict-promotion.test-scenario.md) - Under --strict, profile warnings become errors while unresolved targets stay warnings.
 * [Validate Golden Bundle](validate-golden.test-scenario.md) - A clean bundle validates with zero errors and warnings.
