@@ -108,10 +108,19 @@ Releases are automated. Publishing a GitHub release triggers both
 site and the package always describe the same version.
 
 ```bash
-npm version <patch|minor|major>   # bumps package.json and tags
+npm version <patch|minor|major> --tag-version-prefix=""   # bumps package.json and tags
 git push --follow-tags
 gh release create <tag> --generate-notes
 ```
+
+Tags carry **no `v` prefix** (`0.2.1`, not `v0.2.1`), so `--tag-version-prefix=""` is required;
+npm defaults to prefixing. The publish workflow strips a `v` if present, but the release names
+would stop matching the existing ones.
+
+`npm version` rewrites `package.json` with npm's formatting, which Biome disagrees with, and
+that lands in the version commit and fails `pnpm lint` in the publish workflow *after* the tag
+already exists. The `version` lifecycle script re-formats and re-stages the file before the
+commit is made, which is what keeps that from happening. Do not remove it.
 
 npm uses **trusted publishing** via OIDC, so there is no `NPM_TOKEN` in this repository. The
 workflow needs `id-token: write` and npm >= 11.5.1; removing either breaks publishing with an

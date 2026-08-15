@@ -13,24 +13,12 @@
   "bugs": {
     "url": "https://github.com/brandonburrus/graphspec/issues"
   },
-  "keywords": [
-    "spec-driven-development",
-    "okf",
-    "knowledge-graph",
-    "cli",
-    "ai-agents"
-  ],
+  "keywords": ["spec-driven-development", "okf", "knowledge-graph", "cli", "ai-agents"],
   "bin": {
     "graphspec": "dist/cli.js",
     "graph-spec-cli": "dist/cli.js"
   },
-  "files": [
-    "dist",
-    "src",
-    "skills",
-    "README.md",
-    "LICENSE"
-  ],
+  "files": ["dist", "src", "skills", "README.md", "LICENSE"],
   "publishConfig": {
     "access": "public"
   },
@@ -47,6 +35,7 @@
   "scripts": {
     "prepack": "npm run build",
     "prepublishOnly": "npm run lint && npm run typecheck && npm run test",
+    "version": "biome check --write package.json && git add package.json",
     "build": "tsc -p tsconfig.json && npm run build:viewer",
     "build:viewer": "esbuild src/viewer/main.ts --bundle --minify --format=iife --target=es2022 --outdir=dist/viewer --entry-names=viewer",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.viewer.json",
