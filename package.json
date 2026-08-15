@@ -9,11 +9,20 @@
     "type": "git",
     "url": "https://github.com/brandonburrus/graphspec.git"
   },
-  "keywords": ["spec-driven-development", "okf", "knowledge-graph", "cli", "ai-agents"],
+  "keywords": [
+    "spec-driven-development",
+    "okf",
+    "knowledge-graph",
+    "cli",
+    "ai-agents"
+  ],
   "bin": {
     "graphspec": "./dist/cli.js"
   },
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -33,7 +42,9 @@
     "format": "biome format --write ."
   },
   "dependencies": {
+    "chalk": "^6.0.0",
     "commander": "^12.1.0",
+    "figlet": "^1.11.4",
     "gray-matter": "^4.0.3"
   },
   "devDependencies": {

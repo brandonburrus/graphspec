@@ -11,6 +11,7 @@ import { consoleWriter } from "./commands/io.js";
 import { runOrder } from "./commands/order.js";
 import { runQuery } from "./commands/query.js";
 import { runValidate } from "./commands/validate.js";
+import { banner } from './banner.js';
 
 /** Build the commander program (exported for testing). */
 export function buildProgram(): Command {
@@ -21,6 +22,7 @@ export function buildProgram(): Command {
     .description(
       "Author software specs as an OKF knowledge graph and build software by traversing it.",
     )
+    .addHelpText("beforeAll", banner())
     .version("0.1.0");
 
   program
