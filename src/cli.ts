@@ -4,6 +4,7 @@
  */
 
 import { Command } from "commander";
+import { banner } from "./banner.js";
 import { runCoverage } from "./commands/coverage.js";
 import { runGraph } from "./commands/graph.js";
 import { runIndex } from "./commands/index-cmd.js";
@@ -11,7 +12,6 @@ import { consoleWriter } from "./commands/io.js";
 import { runOrder } from "./commands/order.js";
 import { runQuery } from "./commands/query.js";
 import { runValidate } from "./commands/validate.js";
-import { banner } from './banner.js';
 
 /** Build the commander program (exported for testing). */
 export function buildProgram(): Command {
