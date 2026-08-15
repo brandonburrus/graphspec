@@ -7,13 +7,20 @@
   "author": "brandonburrus",
   "repository": {
     "type": "git",
-    "url": "https://github.com/brandonburrus/graphspec.git"
+    "url": "git+https://github.com/brandonburrus/graphspec.git"
+  },
+  "homepage": "https://github.com/brandonburrus/graphspec#readme",
+  "bugs": {
+    "url": "https://github.com/brandonburrus/graphspec/issues"
   },
   "keywords": ["spec-driven-development", "okf", "knowledge-graph", "cli", "ai-agents"],
   "bin": {
-    "graphspec": "./dist/cli.js"
+    "graphspec": "dist/cli.js"
   },
-  "files": ["dist", "README.md"],
+  "files": ["dist", "src", "skills", "README.md", "LICENSE"],
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -24,6 +31,8 @@
     "node": ">=20"
   },
   "scripts": {
+    "prepack": "npm run build",
+    "prepublishOnly": "npm run lint && npm run typecheck && npm run test",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",

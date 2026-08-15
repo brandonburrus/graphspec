@@ -17,15 +17,20 @@ any other spec format; it only knows OKF plus the graphspec profile.
 ## Installation
 
 ```bash
-pnpm install
-pnpm build
-# invoke the built CLI
-node dist/cli.js --help
-# or link it globally
-npm link   # exposes the `graphspec` command
+npm install -g graphspec   # the `graphspec` command
+npx graphspec --help       # or run it without installing
+npm install graphspec      # as a library dependency
 ```
 
-Requires Node.js >= 20 and pnpm.
+Requires Node.js >= 20. The package is ESM-only: import it with `import`, not `require`.
+
+To work on graphspec itself:
+
+```bash
+pnpm install
+pnpm build
+node dist/cli.js --help
+```
 
 ## Concepts
 

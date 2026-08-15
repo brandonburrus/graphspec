@@ -70,6 +70,28 @@ Verify a change against the real CLI, not just the suite: `pnpm build && node di
 validate spec --strict` and `node dist/cli.js coverage spec`. The `spec/` bundle is the
 dogfood fixture and is expected to stay at 0 errors, 0 warnings, and 0 coverage gaps.
 
+## Releasing
+
+Published to npm as `graphspec` (unscoped, public). `dist/` is gitignored and built at pack
+time, so never commit it.
+
+```bash
+npm version <patch|minor|major>   # tags the release
+npm publish                       # runs the gate below, then publishes
+```
+
+- `prepublishOnly` runs lint → typecheck → test, so a red repo cannot be published.
+- `prepack` runs the build, so the tarball always carries a fresh `dist/`.
+- `files` ships `dist`, `src`, `skills`, `README.md`, `LICENSE`. `src` is included so the
+  shipped `.js.map`/`.d.ts.map` files resolve to real sources; dropping it silently breaks
+  consumer debugging. `skills` is included because the README points users at those paths.
+- The package is **ESM-only**. There is no CommonJS build and `require("graphspec")` will
+  not work; that is deliberate, not an oversight.
+- Verify a release candidate the way a consumer sees it, not just via `npm pack`:
+  `npm pack`, then in a scratch directory with `"type": "module"`, `npm install
+  <tarball>`, run `./node_modules/.bin/graphspec validate <bundle>`, and import the library
+  once to confirm `exports` and the bundled types resolve.
+
 ## Key Decisions
 
 - 2026-08-13: Adopt OKF v0.1 as the storage format rather than inventing one. Why: an open
