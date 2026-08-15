@@ -191,9 +191,10 @@ with no dependency on any particular agent runtime):
   porting each covering `TestScenario` into a real test.
 
 ```bash
-npx skills add brandonburrus/graphspec              # both, interactive
-npx skills add brandonburrus/graphspec --all        # both, no prompts
-npx skills add brandonburrus/graphspec -s create-graph-spec
+npx skills add brandonburrus/graphspec                        # pick skills + agents interactively
+npx skills add brandonburrus/graphspec -s create-graph-spec   # just one skill
+npx skills add brandonburrus/graphspec --all                  # every skill, every agent, no prompts
+npx skills add brandonburrus/graphspec -g                     # user-level instead of project-level
 ```
 
 Or copy the directories into wherever your agent runtime keeps skills.
