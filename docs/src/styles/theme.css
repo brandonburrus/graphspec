@@ -1,0 +1,201 @@
+/*
+ * GraphSpec docs theme.
+ *
+ * Warm neutral paper and ink with a single burnt-amber accent, IBM Plex Sans for prose and
+ * IBM Plex Mono as a brand device (the product is filenames and commands, so monospace does
+ * real work here rather than decoration). Starlight ships dark as the default `:root` and
+ * applies light under `[data-theme='light']`, so both are defined in full.
+ */
+
+:root {
+  --gs-accent: #e2903f;
+  --gs-accent-strong: #f0ac66;
+  --gs-accent-soft: #3a2a16;
+
+  --gs-bg: #171613;
+  --gs-bg-raised: #1d1b17;
+  --gs-bg-sunken: #232019;
+  --gs-line: #302c25;
+  --gs-ink: #ece8e0;
+  --gs-ink-muted: #b0a899;
+
+  --sl-font: "IBM Plex Sans Variable", ui-sans-serif, system-ui, sans-serif;
+  --sl-font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --sl-color-accent-low: var(--gs-accent-soft);
+  --sl-color-accent: var(--gs-accent);
+  --sl-color-accent-high: var(--gs-accent-strong);
+
+  --sl-color-white: #fbf9f5;
+  --sl-color-gray-1: #e6e1d8;
+  --sl-color-gray-2: #c8c2b6;
+  --sl-color-gray-3: var(--gs-ink-muted);
+  --sl-color-gray-4: #6f6858;
+  --sl-color-gray-5: #453f35;
+  --sl-color-gray-6: var(--gs-bg-raised);
+  --sl-color-gray-7: var(--gs-bg-sunken);
+  --sl-color-black: var(--gs-bg);
+
+  --sl-color-bg: var(--gs-bg);
+  --sl-color-bg-nav: var(--gs-bg-raised);
+  --sl-color-bg-sidebar: var(--gs-bg-raised);
+  --sl-color-bg-inline-code: var(--gs-bg-sunken);
+  --sl-color-hairline: var(--gs-line);
+  --sl-color-hairline-light: var(--gs-line);
+  --sl-color-hairline-shade: var(--gs-line);
+  --sl-color-text: var(--gs-ink);
+  --sl-color-text-accent: var(--gs-accent-strong);
+
+  /* Product register: 100 to 200ms on color and opacity only. */
+  --gs-ease: cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+:root[data-theme="light"] {
+  --gs-accent: #9c4a0a;
+  --gs-accent-strong: #7e3b08;
+  --gs-accent-soft: #f4e7d8;
+
+  --gs-bg: #fcfbf8;
+  --gs-bg-raised: #f5f3ed;
+  --gs-bg-sunken: #efebe2;
+  --gs-line: #e0dbd0;
+  --gs-ink: #1c1a16;
+  --gs-ink-muted: #5c5648;
+
+  --sl-color-white: #14120f;
+  --sl-color-gray-1: #2a2620;
+  --sl-color-gray-2: #454036;
+  --sl-color-gray-3: var(--gs-ink-muted);
+  --sl-color-gray-4: #7d7565;
+  --sl-color-gray-5: #b8b1a3;
+  --sl-color-gray-6: var(--gs-bg-raised);
+  --sl-color-gray-7: var(--gs-bg-sunken);
+  --sl-color-black: var(--gs-bg);
+
+  --sl-color-bg: var(--gs-bg);
+  --sl-color-bg-nav: var(--gs-bg-raised);
+  --sl-color-bg-sidebar: var(--gs-bg-raised);
+  --sl-color-bg-inline-code: var(--gs-bg-sunken);
+  --sl-color-text: var(--gs-ink);
+  --sl-color-text-accent: var(--gs-accent-strong);
+}
+
+/* The wordmark is the one place the mono face carries brand rather than content. */
+.site-title {
+  font-family: var(--sl-font-mono);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+/*
+ * Prose measure only. Do not set --sl-content-width here: that variable sizes the layout
+ * grid at a higher level, and overriding it on the markdown container widens code blocks
+ * out from under their scroll container and into the table of contents.
+ */
+.sl-markdown-content p,
+.sl-markdown-content li {
+  max-width: 72ch;
+}
+
+.sl-markdown-content h1,
+.sl-markdown-content h2,
+.sl-markdown-content h3 {
+  text-wrap: balance;
+  letter-spacing: -0.015em;
+}
+
+.sl-markdown-content p {
+  text-wrap: pretty;
+}
+
+/*
+ * Wide content scrolls inside its own container; the page itself never scrolls sideways.
+ * Starlight's main column is a flex item, and a flex item defaults to `min-width: auto`,
+ * which makes it refuse to shrink below its widest child. Without this, one long line in a
+ * code block widens the whole document and pushes content under the table of contents.
+ */
+.main-pane {
+  min-width: 0;
+}
+
+.sl-markdown-content :is(.expressive-code, .expressive-code figure) {
+  max-width: 100%;
+}
+
+.sl-markdown-content .expressive-code pre {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.sl-markdown-content .table-wrapper {
+  overflow-x: auto;
+}
+
+/* Tables carry most of the reference material, so they get real attention. */
+.sl-markdown-content table {
+  border-collapse: collapse;
+  font-size: var(--sl-text-sm);
+}
+
+.sl-markdown-content :is(th, td) {
+  border: 1px solid var(--gs-line);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.sl-markdown-content thead th {
+  background: var(--gs-bg-sunken);
+  font-weight: 600;
+}
+
+.sl-markdown-content :is(th, td) code {
+  white-space: nowrap;
+}
+
+/* Inline code reads as a filename or flag, so keep it tight and unrounded. */
+.sl-markdown-content :not(pre) > code {
+  border: 1px solid var(--gs-line);
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+  font-size: 0.9em;
+}
+
+.sl-markdown-content :is(h1, h2, h3, h4) > code {
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+/* Cards and asides: one border or one shadow, never both. */
+.card,
+.starlight-aside {
+  border-radius: 8px;
+}
+
+.card {
+  box-shadow: none;
+}
+
+/* Nav: color-only transitions. No transform hover. */
+.sidebar-content a,
+.sl-markdown-content a {
+  transition: color 150ms var(--gs-ease);
+}
+
+/* Keyboard users get a real ring, not the browser default that the theme washes out. */
+:where(a, button, summary, input, select):focus-visible {
+  outline: 2px solid var(--gs-accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

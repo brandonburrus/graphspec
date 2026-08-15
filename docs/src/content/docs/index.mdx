@@ -1,0 +1,79 @@
+---
+title: GraphSpec
+description: Author software specs as a knowledge graph, then build software by traversing it. A CLI, a library, and two agent skills for spec-driven development.
+template: splash
+hero:
+  tagline: Specs as a graph, not a document. Pull the subgraph for the work in front of you, and find out mechanically which requirements nothing implements or tests.
+  actions:
+    - text: Get started
+      link: /start/what-it-is/
+      icon: right-arrow
+      variant: primary
+    - text: View on GitHub
+      link: https://github.com/brandonburrus/graphspec
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+A GraphSpec bundle is a directory of markdown files. Each file is one concept, its filename
+carries its type, and its frontmatter declares typed edges to other concepts.
+
+```yaml title="specification/checkout.feature.md"
+---
+type: Feature
+title: Checkout
+relations:
+  includes:
+    - /specification/payment.requirement.md
+    - /specification/tax.requirement.md
+---
+
+# Summary
+
+Take payment for a cart and issue a receipt.
+```
+
+That structure is what makes the spec queryable. Instead of reading a whole design document
+to change one component, ask for exactly what touches it:
+
+```bash
+npx graph-spec-cli graph spec/ --from architecture/validator.component --depth 1
+npx graph-spec-cli coverage spec/ --strict
+npx graph-spec-cli order spec/
+```
+
+## Why a graph
+
+<CardGrid>
+  <Card title="Scoped context">
+    A document forces you to load all of it. A graph lets you pull one component plus its
+    contracts, requirements, constraints, and covering tests, and nothing else. That matters
+    most when the reader is an agent with a context budget.
+  </Card>
+  <Card title="Checkable completeness">
+    `coverage` reports requirements that nothing satisfies and requirements that no test
+    scenario covers. Those are gaps a prose spec hides, and they exit non-zero under
+    `--strict` so CI can block on them.
+  </Card>
+  <Card title="Derived build order">
+    `order` topologically sorts systems and components by their `depends-on` edges, so the
+    sequence to build in comes from the spec rather than from a guess.
+  </Card>
+  <Card title="Plain markdown">
+    Bundles are [OKF v0.1](https://okf.md/spec) knowledge bundles: UTF-8 markdown with YAML
+    frontmatter. They diff, review, and merge like any other file in the repository.
+  </Card>
+</CardGrid>
+
+## Start here
+
+Install the two agent skills and let a coding agent drive:
+
+```bash
+npx skills add brandonburrus/graphspec
+```
+
+Or install the CLI and author a bundle by hand. [Write your first spec](/start/first-spec/)
+walks through a four concept bundle from empty directory to a clean `--strict` run.

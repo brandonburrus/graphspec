@@ -6,7 +6,14 @@
     "useIgnoreFile": true
   },
   "files": {
-    "ignore": ["dist", "node_modules", "spec/**/*.md", "tests/fixtures/**"]
+    "ignore": [
+      "dist",
+      "node_modules",
+      "spec/**/*.md",
+      "tests/fixtures/**",
+      "docs/dist/**",
+      "docs/.astro/**"
+    ]
   },
   "organizeImports": {
     "enabled": true
