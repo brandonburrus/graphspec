@@ -1,3 +1,6 @@
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { loadBundle } from "../src/core/bundle.js";
 import { CHILD_EDGE, Graph } from "../src/core/graph.js";
@@ -83,5 +86,54 @@ describe("loadBundle", () => {
     expect(bundle.reserved.some((r) => r.kind === "index" && r.dir === "")).toBe(true);
     // No reserved file is ever treated as a concept.
     expect(bundle.concepts.some((c) => c.relPath.endsWith("index.md"))).toBe(false);
+  });
+
+  it("ignores markdown files with no type token, at any depth", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "graphspec-ignore-"));
+    try {
+      await writeFile(
+        join(dir, "login.requirement.md"),
+        "---\ntype: Requirement\nstatus: accepted\n---\n",
+        "utf8",
+      );
+      // Plain docs that repos keep beside a bundle must be able to coexist with it.
+      await writeFile(join(dir, "AGENTS.md"), "# Agent notes\n", "utf8");
+      await writeFile(join(dir, "README.md"), "# Readme\n", "utf8");
+      await mkdir(join(dir, "nested"), { recursive: true });
+      await writeFile(join(dir, "nested", "AGENTS.md"), "# Nested notes\n", "utf8");
+
+      const bundle = await loadBundle(dir);
+      expect(bundle.concepts.map((c) => c.relPath)).toEqual(["login.requirement.md"]);
+      expect(bundle.ignored).toEqual(["AGENTS.md", "README.md", "nested/AGENTS.md"]);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("still treats reserved files as reserved even though they carry no type token", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "graphspec-ignore-"));
+    try {
+      await writeFile(join(dir, "index.md"), "# Index\n", "utf8");
+      await writeFile(join(dir, "log.md"), "# Update Log\n", "utf8");
+      const bundle = await loadBundle(dir);
+      expect(bundle.reserved.map((r) => r.kind).sort()).toEqual(["index", "log"]);
+      expect(bundle.ignored).toEqual([]);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("keeps a file whose token is outside the profile vocabulary", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "graphspec-ignore-"));
+    try {
+      // An unrecognized token is a profile warning, not grounds for silently dropping the
+      // file — otherwise a typo'd type token would make a concept vanish without a word.
+      await writeFile(join(dir, "x.widget.md"), "---\ntype: Widget\n---\n", "utf8");
+      const bundle = await loadBundle(dir);
+      expect(bundle.concepts.map((c) => c.relPath)).toEqual(["x.widget.md"]);
+      expect(bundle.ignored).toEqual([]);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
   });
 });

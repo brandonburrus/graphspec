@@ -24,8 +24,10 @@ export async function runValidate(
   writer: Writer,
 ): Promise<number> {
   let result: ReturnType<typeof validateBundle>;
+  let ignored: readonly string[];
   try {
     const bundle = await loadBundle(path);
+    ignored = bundle.ignored;
     result = validateBundle(bundle, { strict: options.strict ?? false });
   } catch (err) {
     writer.err(`error: ${(err as Error).message}`);
@@ -41,6 +43,7 @@ export async function runValidate(
           errorCount: result.errorCount,
           warningCount: result.warningCount,
           conceptCount: result.conceptCount,
+          ignored,
           diagnostics: result.diagnostics,
         },
         null,
@@ -54,7 +57,13 @@ export async function runValidate(
     writer.out(formatDiagnostic(d));
   }
 
-  const summary = `\n${result.conceptCount} concept(s), ${result.errorCount} error(s), ${result.warningCount} warning(s)${options.strict ? " [strict]" : ""}`;
+  // Report skipped files so a concept mis-named without its `.<type-token>` segment is
+  // visibly absent rather than silently missing from the graph.
+  const ignoredNote =
+    ignored.length > 0
+      ? `\n${ignored.length} file(s) ignored (no type token): ${ignored.join(", ")}`
+      : "";
+  const summary = `${ignoredNote}\n\n${result.conceptCount} concept(s), ${result.errorCount} error(s), ${result.warningCount} warning(s)${options.strict ? " [strict]" : ""}`;
   if (result.errorCount > 0) {
     writer.err(summary.trim());
     return 1;

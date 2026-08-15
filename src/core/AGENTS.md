@@ -24,6 +24,11 @@ command-specific logic, so traversal, ordering, and coverage all layer on one mo
   Windows (`bundle.ts` converts). Anything comparing IDs to paths must normalize first.
 - **`index.md` and `log.md` are reserved at every level and are not concepts.** They never
   appear as graph nodes. Code that counts concepts must not count them.
+- **Bundle membership is decided by the filename, in this order:** reserved file → concept if
+  the basename has a `.<token>` segment → otherwise ignored and recorded on `Bundle.ignored`.
+  So `AGENTS.md` and `README.md` can sit inside a bundle. The token is deliberately *not*
+  checked against the profile vocabulary here: an unrecognized token stays a concept so the
+  validator can warn about it, rather than making a typo'd file vanish.
 - **Edges may not resolve.** `Edge.resolved` is false when `to` names no existing concept.
   This is legal (reference-first authoring), so every traversal must skip unresolved edges
   or it will walk into nodes that do not exist.

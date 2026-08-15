@@ -30,10 +30,14 @@ Requires Node.js >= 20 and pnpm.
 ## Concepts
 
 - **Bundle** — a directory of `.md` files forming one spec.
-- **Concept** — one non-reserved markdown file: YAML frontmatter + markdown body. Its
-  **ID** is the bundle-relative path minus `.md`.
+- **Concept** — one markdown file named `<name>.<type-token>.md`: YAML frontmatter +
+  markdown body. Its **ID** is the bundle-relative path minus `.md`.
 - **Reserved files** — `index.md` (directory listing) and `log.md` (change history) at any
   level; these are not concepts.
+- **Ignored files** — any other `.md` file with no `.<type-token>` segment, such as
+  `AGENTS.md` or `README.md`. These are skipped rather than treated as malformed concepts,
+  so ordinary docs can live inside a bundle directory. `validate` lists what it skipped, so
+  a concept accidentally missing its type token shows up rather than silently disappearing.
 - **Relations** — typed edges declared in a concept's frontmatter under `relations:`.
 
 ### The graphspec profile

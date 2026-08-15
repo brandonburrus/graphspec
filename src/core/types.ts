@@ -73,4 +73,10 @@ export interface Bundle {
   readonly concepts: readonly Concept[];
   /** All reserved files (index.md / log.md). */
   readonly reserved: readonly ReservedFile[];
+  /**
+   * Bundle-relative paths of `.md` files skipped because their filename carries no
+   * `.<type-token>` segment (e.g. `AGENTS.md`, `README.md`). Retained so callers can report
+   * what was left out rather than letting a mis-named concept vanish silently.
+   */
+  readonly ignored: readonly string[];
 }

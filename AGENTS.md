@@ -26,6 +26,11 @@ These are load-bearing. Violating one silently breaks the product thesis.
 - **The profile is data, not logic.** `src/profile/` is the single source of truth for the
   13 node types and 16 relations. Adding vocabulary means editing that data, never adding
   branches in the validator or commands.
+- **The filename convention decides bundle membership.** Only `<name>.<type-token>.md` files
+  (plus the reserved `index.md`/`log.md`) are concepts. A plain `AGENTS.md` or `README.md` in
+  a bundle directory is ordinary prose and is skipped, so agent docs and specs coexist. The
+  skipped paths are kept on `Bundle.ignored` and reported by `validate`, because a concept
+  that lost its token would otherwise disappear without a word.
 
 ## Structure
 
@@ -37,7 +42,7 @@ These are load-bearing. Violating one silently breaks the product thesis.
 | `src/commands/` | One module per CLI subcommand, all writer-injected. See `src/commands/AGENTS.md`. |
 | `src/cli.ts` | Commander wiring; parses flags and delegates to `src/commands/`. |
 | `src/index.ts` | The public library surface (re-exports profile + core + validate). |
-| `spec/` | graphspec's own spec, as a graphspec bundle. See "Working in `spec/`" below. |
+| `spec/` | graphspec's own spec, as a graphspec bundle. See `spec/AGENTS.md`. |
 | `skills/` | Portable `SKILL.md` agent skills, with no dependency on any agent runtime. |
 | `tests/` | Vitest suites, mirroring the source module layout. |
 
@@ -64,30 +69,6 @@ pnpm lint:fix    # biome check --write .
 Verify a change against the real CLI, not just the suite: `pnpm build && node dist/cli.js
 validate spec --strict` and `node dist/cli.js coverage spec`. The `spec/` bundle is the
 dogfood fixture and is expected to stay at 0 errors, 0 warnings, and 0 coverage gaps.
-
-## Working in `spec/`
-
-`spec/` is a working graphspec bundle specifying graphspec itself. It does three jobs at
-once, so changes there are not "just docs": it is the dogfooding proof, a **test fixture**
-several suites in `tests/` load directly, and the worked example the README and both agent
-skills point at.
-
-- **There is deliberately no `AGENTS.md` inside `spec/`.** The bundle loader treats every
-  non-reserved `.md` file as a concept (only `index.md` and `log.md` are reserved), so an
-  `AGENTS.md` in a bundle directory fails OKF conformance with a hard `okf/missing-frontmatter`
-  error. This bites any repo that keeps agent docs beside a bundle; graphspec has no
-  file-level ignore mechanism today.
-- Filenames follow the profile: `<name>.<type-token>.md`, token agreeing with the
-  frontmatter `type`.
-- After adding, removing, or renaming a concept, regenerate the listings with
-  `node dist/cli.js index spec --log "<what changed>"`. `index.md` and `log.md` are
-  generated; hand edits get reverted by the next run.
-- A new Requirement needs a `satisfies` edge from a System or Component and a `covers` edge
-  from a TestScenario, or `coverage` reports a gap. Add the TestScenario only when a real
-  test backs it, otherwise the coverage report lies.
-- Tests should pin *behavior*, not this bundle's incidental state. A test that required a
-  coverage gap to exist here broke the moment that gap was legitimately closed; such tests
-  belong on a purpose-built temp fixture.
 
 ## Key Decisions
 

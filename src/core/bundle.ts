@@ -4,7 +4,7 @@
 
 import { readFile, readdir, stat } from "node:fs/promises";
 import { join, relative, sep } from "node:path";
-import { isReservedFilename, parseConcept, parseReserved } from "./parser.js";
+import { fileTokenFromName, isReservedFilename, parseConcept, parseReserved } from "./parser.js";
 import type { Bundle, Concept, ReservedFile } from "./types.js";
 
 /** Directory names skipped while walking a bundle. */
@@ -51,17 +51,31 @@ export async function loadBundle(root: string): Promise<Bundle> {
   const filePaths = (await collectMarkdownFiles(root)).sort();
   const concepts: Concept[] = [];
   const reserved: ReservedFile[] = [];
+  const ignored: string[] = [];
 
   for (const filePath of filePaths) {
     const relPath = toPosixRel(root, filePath);
     const basename = relPath.slice(relPath.lastIndexOf("/") + 1);
-    const raw = await readFile(filePath, "utf8");
     if (isReservedFilename(basename)) {
-      reserved.push(parseReserved(raw, filePath, relPath));
-    } else {
-      concepts.push(parseConcept(raw, filePath, relPath));
+      reserved.push(parseReserved(await readFile(filePath, "utf8"), filePath, relPath));
+      continue;
     }
+    // The graphspec profile names every concept `<name>.<type-token>.md`, so a bare
+    // `AGENTS.md`/`README.md` is ordinary prose a repo keeps beside its bundle, not a
+    // malformed concept. Skipping those lets the two coexist in one directory. The token is
+    // not checked against the profile vocabulary here: an unrecognized token is a validation
+    // warning, and dropping such a file would make a typo'd concept disappear silently.
+    if (fileTokenFromName(stripMdSuffix(basename)) === undefined) {
+      ignored.push(relPath);
+      continue;
+    }
+    concepts.push(parseConcept(await readFile(filePath, "utf8"), filePath, relPath));
   }
 
-  return { root, concepts, reserved };
+  return { root, concepts, reserved, ignored };
+}
+
+/** Strip a trailing `.md` (case-insensitive) from a basename. */
+function stripMdSuffix(basename: string): string {
+  return basename.toLowerCase().endsWith(".md") ? basename.slice(0, -3) : basename;
 }
