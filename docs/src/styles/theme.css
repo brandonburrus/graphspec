@@ -1,26 +1,26 @@
 /*
  * GraphSpec docs theme.
  *
- * Cool slate neutrals with a single teal accent, IBM Plex Sans for prose and IBM Plex Mono as
+ * Blue-slate neutrals with a single blue accent, IBM Plex Sans for prose and IBM Plex Mono as
  * a brand device (the product is filenames and commands, so monospace does real work here
  * rather than decoration). Starlight ships dark as the default `:root` and applies light
  * under `[data-theme='light']`, so both are defined in full.
  *
- * The neutrals are cool but not navy, and the accent is teal rather than cyan or indigo, to
- * stay clear of the generic dark-SaaS blue-black composition.
+ * The accent sits at a true blue rather than cyan. The neutrals carry the same hue at very
+ * low saturation, so the page reads as one family instead of grey with a blue bolted on.
  */
 
 :root {
-  --gs-accent: #38b2a4;
-  --gs-accent-strong: #5ed0c2;
-  --gs-accent-soft: #10312f;
+  --gs-accent: #58a6ff;
+  --gs-accent-strong: #79bbff;
+  --gs-accent-soft: #10243d;
 
-  --gs-bg: #101619;
-  --gs-bg-raised: #151c20;
-  --gs-bg-sunken: #1b242a;
-  --gs-line: #27333a;
-  --gs-ink: #e3ebef;
-  --gs-ink-muted: #92a3ad;
+  --gs-bg: #0f141b;
+  --gs-bg-raised: #141a22;
+  --gs-bg-sunken: #1a2029;
+  --gs-line: #262f3a;
+  --gs-ink: #e4eaf1;
+  --gs-ink-muted: #93a1b3;
 
   --sl-font: "IBM Plex Sans Variable", ui-sans-serif, system-ui, sans-serif;
   --sl-font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
@@ -29,12 +29,12 @@
   --sl-color-accent: var(--gs-accent);
   --sl-color-accent-high: var(--gs-accent-strong);
 
-  --sl-color-white: #f6fafb;
-  --sl-color-gray-1: #dce6eb;
-  --sl-color-gray-2: #b7c5cd;
+  --sl-color-white: #f5f9fd;
+  --sl-color-gray-1: #dae2ec;
+  --sl-color-gray-2: #b4c1d0;
   --sl-color-gray-3: var(--gs-ink-muted);
-  --sl-color-gray-4: #5d6d77;
-  --sl-color-gray-5: #3a474e;
+  --sl-color-gray-4: #5c6a7b;
+  --sl-color-gray-5: #38424f;
   --sl-color-gray-6: var(--gs-bg-raised);
   --sl-color-gray-7: var(--gs-bg-sunken);
   --sl-color-black: var(--gs-bg);
@@ -54,23 +54,23 @@
 }
 
 :root[data-theme="light"] {
-  --gs-accent: #0c6f66;
-  --gs-accent-strong: #08554e;
-  --gs-accent-soft: #dceeeb;
+  --gs-accent: #0b5cad;
+  --gs-accent-strong: #08498c;
+  --gs-accent-soft: #dceafb;
 
-  --gs-bg: #fbfcfd;
-  --gs-bg-raised: #f1f5f7;
-  --gs-bg-sunken: #e8eef1;
-  --gs-line: #d7e0e5;
-  --gs-ink: #101619;
-  --gs-ink-muted: #4c5b64;
+  --gs-bg: #fbfcfe;
+  --gs-bg-raised: #f1f4f8;
+  --gs-bg-sunken: #e8edf3;
+  --gs-line: #d8dfe8;
+  --gs-ink: #0f141b;
+  --gs-ink-muted: #4b5766;
 
-  --sl-color-white: #0b1013;
-  --sl-color-gray-1: #1e272c;
-  --sl-color-gray-2: #38454c;
+  --sl-color-white: #0a0e14;
+  --sl-color-gray-1: #1c242e;
+  --sl-color-gray-2: #36414f;
   --sl-color-gray-3: var(--gs-ink-muted);
-  --sl-color-gray-4: #6b7a83;
-  --sl-color-gray-5: #adbac1;
+  --sl-color-gray-4: #67748a;
+  --sl-color-gray-5: #aab5c2;
   --sl-color-gray-6: var(--gs-bg-raised);
   --sl-color-gray-7: var(--gs-bg-sunken);
   --sl-color-black: var(--gs-bg);

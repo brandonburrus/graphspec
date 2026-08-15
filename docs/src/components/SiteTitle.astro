@@ -1,0 +1,51 @@
+---
+/*
+ * Starlight renders a configured logo as `<img src="mark.svg">`. An SVG loaded through `img`
+ * is a separate document, so `currentColor` inside it resolves against nothing and paints
+ * black in both themes rather than matching the wordmark beside it.
+ *
+ * Inlining the same file fixes that: the mark becomes part of this document and inherits the
+ * accent color the wordmark already uses. `?raw` keeps `src/assets/mark.svg` the single
+ * definition of the shape rather than duplicating paths here.
+ */
+import markSvg from "../assets/mark.svg?raw";
+
+const { siteTitle, siteTitleHref } = Astro.locals.starlightRoute;
+---
+
+<a href={siteTitleHref} class="site-title sl-flex">
+  <span class="mark" aria-hidden="true" set:html={markSvg} />
+  <span translate="no">{siteTitle}</span>
+</a>
+
+<style>
+  @layer starlight.core {
+    .site-title {
+      align-items: center;
+      gap: var(--sl-nav-gap);
+      font-size: var(--sl-text-h4);
+      font-weight: 600;
+      color: var(--sl-color-text-accent);
+      text-decoration: none;
+      white-space: nowrap;
+      min-width: 0;
+    }
+
+    .site-title span:not(.mark) {
+      overflow: hidden;
+    }
+
+    .mark {
+      display: flex;
+      flex-shrink: 0;
+      height: calc(var(--sl-nav-height) - 2 * var(--sl-nav-pad-y));
+      width: auto;
+      color: inherit;
+    }
+
+    .mark :global(svg) {
+      height: 100%;
+      width: auto;
+    }
+  }
+</style>

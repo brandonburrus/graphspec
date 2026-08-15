@@ -101,7 +101,9 @@ export default defineConfig({
       title: "GraphSpec",
       description:
         "Author software specs as a knowledge graph, then build software by traversing it. CLI, library, and agent skills for spec-driven development.",
-      logo: { src: "./src/assets/mark.svg", replacesTitle: false },
+      // The mark is inlined by the SiteTitle override rather than configured here, so it can
+      // inherit the accent color. See src/components/SiteTitle.astro.
+      components: { SiteTitle: "./src/components/SiteTitle.astro" },
       favicon: "/favicon.svg",
       customCss: [
         "@fontsource-variable/ibm-plex-sans",
