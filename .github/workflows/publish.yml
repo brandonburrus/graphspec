@@ -1,0 +1,66 @@
+name: Publish to npm
+
+# Publishes graph-spec-cli when a GitHub release is published. `published` (not `created`)
+# is the trigger so that saving a draft release does not ship a package; the event fires
+# once the release goes public, including when a draft is later published.
+on:
+  release:
+    types: [published]
+
+# `id-token: write` is what makes npm trusted publishing work: it lets the job mint the
+# OIDC token npm exchanges for short-lived publish credentials, so there is no NPM_TOKEN
+# secret in this repo to leak or rotate.
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    name: Build, verify, publish
+    runs-on: ubuntu-latest
+    environment:
+      name: npm
+      url: https://www.npmjs.com/package/graph-spec-cli
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          cache: pnpm
+
+      # Trusted publishing needs npm >= 11.5.1. Node 24 ships a new enough npm today, but
+      # pinning the upgrade keeps this workflow correct if the bundled version regresses.
+      - name: Ensure npm supports trusted publishing
+        run: |
+          npm install -g npm@latest
+          npm --version
+
+      - run: pnpm install --frozen-lockfile
+
+      # Fail before publishing rather than after: npm rejects a duplicate version, but a
+      # tag that disagrees with package.json would otherwise ship the wrong version under
+      # the right-looking release.
+      - name: Check release tag matches package.json version
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(node -p "require('./package.json').version")"
+          if [ "$tag" != "$pkg" ]; then
+            echo "::error::Release tag '$tag' does not match package.json version '$pkg'."
+            exit 1
+          fi
+          echo "Publishing version $pkg"
+
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+
+      # No NODE_AUTH_TOKEN: the OIDC exchange above provides credentials. `prepublishOnly`
+      # and `prepack` re-run the checks and build as a backstop for manual publishes.
+      - name: Publish
+        run: npm publish --provenance --access public
