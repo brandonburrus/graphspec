@@ -23,18 +23,44 @@ pnpm --filter graphspec-docs build   # into docs/dist
 
 ## Design system
 
-Warm neutral paper and ink with a single burnt-amber accent, IBM Plex Sans for prose and IBM
-Plex Mono for code and the wordmark. Both themes are defined in full: Starlight ships dark on
-bare `:root` and light under `:root[data-theme="light"]`, so a color defined in only one place
-breaks the other mode.
+Cool slate neutrals with a single teal accent, IBM Plex Sans for prose and IBM Plex Mono for
+code and the wordmark. Both themes are defined in full: Starlight ships dark on bare `:root`
+and light under `:root[data-theme="light"]`, so a color defined in only one place breaks the
+other mode.
 
 Constraints worth keeping:
 
-- **One accent.** The amber is the only accent. This is why the code theme is `vitesse`: the
-  Shiki defaults highlight in blues that fight it.
+- **One accent.** Teal is the only accent, deliberately not cyan or indigo, and the neutrals
+  are cool without being navy, to stay clear of the generic dark-SaaS blue-black look. The
+  code themes (`github-dark-dimmed` / `github-light`) and the Expressive Code frame overrides
+  in `astro.config.mjs` both exist to keep a second accent from creeping in: the stock frame
+  ships a warm tab indicator and a drop shadow.
 - **Product register, not marketing.** Density high, motion minimal, color transitions only.
   No transform hovers, no scroll choreography.
-- **Contrast.** Body and muted text clear 4.5:1 in both modes. Check any new color.
+- **Contrast.** Body and muted text clear 4.5:1 in both modes. Measured, not assumed: body
+  and headings sit above 15:1, links and the wordmark above 7.9:1.
+
+## Icons
+
+Tabler, patched in at build time by the `useTablerIcons` Vite plugin in `astro.config.mjs`.
+
+Starlight's icon names are a closed enum backed by `components-internals/Icons`, a module of
+filled paths, and there is no config hook for supplying your own set. Tabler is stroked, so
+overriding only some icons would leave two visually different families side by side. The
+plugin therefore appends Tabler equivalents onto both `BuiltInIcons` and `Icons` (it has to be
+both: `Icons` is built by spreading `BuiltInIcons` at module init, so mutating one does not
+affect the other).
+
+- **Brand marks are deliberately not overridden.** GitHub, npm, Astro and the rest stay
+  Starlight's filled versions. A logo is not part of an icon family.
+- **Add a mapping, not a one-off SVG.** To use a new icon, add a `TABLER_FOR` entry keyed by
+  the Starlight name. Hand-rolled SVG paths are how a set drifts.
+- **This reaches into a Starlight internal.** An upgrade could move it. The failure is loud:
+  `tablerPaths` throws at config load on a missing icon, and the plugin throws if the patch
+  target no longer exports `Icons`. If a Starlight upgrade breaks the build here, check that
+  module's path before assuming the plugin is wrong.
+- After changing icons, confirm the patch actually landed rather than trusting the build:
+  `grep -c 'stroke-width="2"' dist/cli/graph/index.html` should be non-zero.
 
 ## Gotchas
 
