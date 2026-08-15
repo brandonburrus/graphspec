@@ -35,10 +35,12 @@
   "scripts": {
     "prepack": "npm run build",
     "prepublishOnly": "npm run lint && npm run typecheck && npm run test",
-    "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "build": "tsc -p tsconfig.json && npm run build:viewer",
+    "build:viewer": "esbuild src/viewer/main.ts --bundle --minify --format=iife --target=es2022 --outdir=dist/viewer --entry-names=viewer",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.viewer.json",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "npm run build && playwright test",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write ."
@@ -51,7 +53,11 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
+    "@playwright/test": "^1.62.1",
+    "@types/d3-force": "^3.0.10",
     "@types/node": "^22.10.2",
+    "d3-force": "^3.0.0",
+    "esbuild": "^0.28.2",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
   }

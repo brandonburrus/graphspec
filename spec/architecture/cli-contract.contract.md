@@ -1,7 +1,7 @@
 ---
 type: Contract
 title: CLI Contract
-description: "The command-line interface surface: validate, query, index, graph, coverage, and order subcommands."
+description: "The command-line interface surface: validate, query, index, graph, coverage, order, and visualize subcommands."
 tags: [architecture, contract]
 ---
 
@@ -13,3 +13,5 @@ tags: [architecture, contract]
 - `graphspec graph [path] [--format json|mermaid|dot] [--from <id>] [--depth <n>] [--rel <names>] [--structure]`
 - `graphspec coverage [path] [--json] [--strict]`
 - `graphspec order [path] [--json]`
+- `graphspec visualize [path] [--out <file>] [--title <text>] [--open]`
+- `graphspec visualize serve [path] [--port <n>] [--title <text>] [--no-open]`

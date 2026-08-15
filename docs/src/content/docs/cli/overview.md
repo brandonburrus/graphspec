@@ -1,6 +1,6 @@
 ---
 title: CLI overview
-description: The six GraphSpec commands, the invocation forms, exit-code conventions, and which command answers which question.
+description: The seven GraphSpec commands, the invocation forms, exit-code conventions, and which command answers which question.
 sidebar:
   order: 1
 ---
@@ -23,6 +23,7 @@ binary is `graphspec`, so `graphspec <command>` also works once it is installed.
 | [`graph`](/cli/graph/) | What is connected to this concept? |
 | [`coverage`](/cli/coverage/) | What has the spec not said yet? |
 | [`order`](/cli/order/) | What should be built first? |
+| [`visualize`](/cli/visualize/) | What does the whole graph look like? |
 
 ## Exit codes
 
@@ -34,13 +35,16 @@ Every command uses the same three:
 | `1` | The spec failed the check: validation errors, coverage gaps under `--strict`, a dependency cycle |
 | `2` | You invoked it wrong: bad flag value, unknown format or relation, unresolved `--from`, unreadable bundle |
 
+`visualize` is the one command that never returns `1`: a bundle with problems is exactly the
+one you want to look at, so its problems are drawn into the page instead.
+
 The split between 1 and 2 is deliberate and worth respecting in scripts. `1` means the bundle
 has a problem worth reporting to a human. `2` means the command never got far enough to judge,
 so retrying with the same arguments will not help.
 
 ## JSON output
 
-Every command takes `--json` except `index`, which reports what it wrote. Use it for anything
+Every command takes `--json` except `index` and `visualize`, which report what they wrote. Use it for anything
 programmatic: the human formats are meant to be read, not parsed.
 
 | Command | Shape |
@@ -63,6 +67,7 @@ npx graph-spec-cli validate .            # after every concept or two
 npx graph-spec-cli validate . --strict   # the bar before calling it done
 npx graph-spec-cli index . --log "..."   # regenerate listings
 npx graph-spec-cli query . --type Requirement
+npx graph-spec-cli visualize serve .     # a live map while you write
 ```
 
 Implementing:

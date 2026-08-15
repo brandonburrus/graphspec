@@ -30,6 +30,7 @@ Or use the CLI directly, with no install:
 npx graph-spec-cli validate spec/ --strict
 npx graph-spec-cli coverage spec/
 npx graph-spec-cli graph spec/ --from architecture/validator.component --depth 1
+npx graph-spec-cli visualize spec/ --open
 ```
 
 Requires Node.js 20 or newer.
@@ -68,6 +69,7 @@ The vocabulary is closed: 13 node types and 16 relations. See the
 | `graph` | What is connected to this concept? |
 | `coverage` | What has the spec not said yet? |
 | `order` | What should be built first? |
+| `visualize` | What does the whole graph look like? |
 
 Full flags, output shapes, and exit codes: [graphspec.dev/cli/overview](https://graphspec.dev/cli/overview/).
 

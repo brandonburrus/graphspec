@@ -39,12 +39,15 @@ These are load-bearing. Violating one silently breaks the product thesis.
 | `src/profile/` | The graphspec vocabulary as data. See `src/profile/AGENTS.md`. |
 | `src/core/` | OKF parsing, the in-memory graph, traversal, order, coverage. See `src/core/AGENTS.md`. |
 | `src/validate/` | OKF conformance + profile checks producing diagnostics. See `src/validate/AGENTS.md`. |
+| `src/visualize/` | Bundle + analyses -> one self-contained HTML page. See `src/visualize/AGENTS.md`. |
+| `src/viewer/` | The browser app inlined into that page. See `src/viewer/AGENTS.md`. |
 | `src/commands/` | One module per CLI subcommand, all writer-injected. See `src/commands/AGENTS.md`. |
 | `src/cli.ts` | Commander wiring; parses flags and delegates to `src/commands/`. |
 | `src/index.ts` | The public library surface (re-exports profile + core + validate). |
 | `spec/` | graphspec's own spec, as a graphspec bundle. See `spec/AGENTS.md`. |
 | `skills/` | Portable `SKILL.md` agent skills, with no dependency on any agent runtime. |
 | `tests/` | Vitest suites, mirroring the source module layout. |
+| `e2e/` | Playwright specs. The only thing that proves the generated page works in a browser. |
 | `docs/` | The graphspec.dev Astro site. See `docs/AGENTS.md`. |
 | `.github/workflows/` | `publish.yml` ships the package, `docs.yml` ships the site. Both fire on release. |
 
@@ -55,21 +58,30 @@ These are load-bearing. Violating one silently breaks the product thesis.
 - Every module opens with a `/** */` block explaining its role. Comments say *why*, not what.
 - Biome owns formatting and lint; it also formats `package.json`, so a `pnpm add` can leave
   the file needing a `pnpm lint:fix` pass.
-- Layering runs one way: `profile` → `core` → `validate` → `commands` → `cli`. Nothing lower
-  imports from something higher.
+- Layering runs one way: `profile` → `core` → `validate` → `visualize` → `commands` → `cli`.
+  Nothing lower imports from something higher. `src/viewer/` is off to the side: it is browser
+  code, imports only types from `src/visualize/`, and nothing imports it back.
 
 ## Commands
 
 ```bash
-pnpm build       # tsc -> dist/
+pnpm build       # tsc -> dist/, then esbuild the viewer -> dist/viewer/
 pnpm test        # vitest run
-pnpm typecheck   # tsc --noEmit
+pnpm test:e2e    # playwright: the generated page, in a real browser
+pnpm typecheck   # both tsconfigs (the viewer needs the DOM lib, the CLI must not have it)
 pnpm lint        # biome check .
 pnpm lint:fix    # biome check --write .
 ```
 
+`pnpm test` does **not** build. Anything that depends on `dist/viewer/` must build it itself;
+`tests/visualize-command.test.ts` does exactly that, so the suite passes on a clean checkout.
+`pnpm test:e2e` builds first itself, and needs `npx playwright install chromium` once. It is
+deliberately not part of `prepublishOnly`, which would make publishing depend on a browser
+download.
+
 Verify a change against the real CLI, not just the suite: `pnpm build && node dist/cli.js
-validate spec --strict` and `node dist/cli.js coverage spec`. The `spec/` bundle is the
+validate spec --strict`, `node dist/cli.js coverage spec`, and for anything touching the
+viewer, `node dist/cli.js visualize spec --open` and look at it. The `spec/` bundle is the
 dogfood fixture and is expected to stay at 0 errors, 0 warnings, and 0 coverage gaps.
 
 ## Releasing
@@ -134,6 +146,9 @@ npm publish
 - 2026-08-15: Publish as `graph-spec-cli` but keep the binary named `graphspec`. Why: npm 403s
   the name `graphspec` as too similar to the existing `graph-spec`, and renaming the command
   would have churned every documented invocation.
+- 2026-08-15: Bundle d3-force into the viewer via esbuild rather than hand-rolling a layout or
+  loading it from a CDN. Why: a CDN breaks the self-contained guarantee, and the library is
+  bundled at pack time as a devDependency, so runtime dependencies stay at four.
 - 2026-08-15: Only `<name>.<type-token>.md` files count as concepts; other `.md` files are
   ignored and reported. Why: lets `AGENTS.md`/`README.md` live inside a bundle, at the cost of
   a deliberate deviation from OKF's "every non-reserved file is a concept" rule.

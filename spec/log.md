@@ -1,6 +1,7 @@
 # Update Log
 
 ## 2026-08-15
+* add visualize command and its spec concepts
 * Note filename-based bundle membership in the OKF source integration
 * Close coverage gaps: add profile-warning and strict-promotion test scenarios, wire concept-filtering satisfies
 

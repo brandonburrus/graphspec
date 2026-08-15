@@ -1,0 +1,675 @@
+/*
+ * The whole design system for the generated page, as custom properties plus a flat layer of
+ * component rules.
+ *
+ * Both themes are defined in full. Light sits on bare `:root`; dark is a `prefers-color-scheme`
+ * override. A color defined in only one of the two breaks the other mode, so every token
+ * appears in both blocks.
+ *
+ * The four layer colors are the categorical palette. Three validated hues plus a neutral for
+ * the glossary layer: see `palette.ts` for why the fourth slot is deliberately not a hue.
+ * Canvas cannot read CSS, so `palette.ts` reads these back through getComputedStyle; renaming
+ * a `--gs-layer-*` token there and here must stay in step.
+ */
+
+:root {
+  --gs-bg: #fbfcfe;
+  --gs-bg-raised: #f4f6fa;
+  --gs-bg-sunken: #e9eef4;
+  --gs-line: #d8dfe8;
+  --gs-ink: #0f141b;
+  --gs-ink-muted: #4b5766;
+  --gs-accent: #0b5cad;
+  --gs-accent-soft: #dceafb;
+
+  --gs-layer-product: #eb6834;
+  --gs-layer-architecture: #2a78d6;
+  --gs-layer-specification: #1baf7a;
+  --gs-layer-glossary: #67748a;
+  --gs-node-unknown: #8894a5;
+  --gs-node-ghost: #8894a5;
+
+  --gs-edge: #c3ccd8;
+  --gs-edge-strong: #4b5766;
+  --gs-status-error: #c2352f;
+  --gs-status-warning: #8a5a00;
+
+  --gs-radius: 6px;
+  --gs-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --gs-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --gs-bg: #0f141b;
+    --gs-bg-raised: #141a22;
+    --gs-bg-sunken: #1a2029;
+    --gs-line: #262f3a;
+    --gs-ink: #e4eaf1;
+    --gs-ink-muted: #93a1b3;
+    --gs-accent: #58a6ff;
+    --gs-accent-soft: #10243d;
+
+    --gs-layer-product: #d95926;
+    --gs-layer-architecture: #3987e5;
+    --gs-layer-specification: #199e70;
+    --gs-layer-glossary: #7c8a9c;
+    --gs-node-unknown: #6b7889;
+    --gs-node-ghost: #6b7889;
+
+    --gs-edge: #2c3743;
+    --gs-edge-strong: #93a1b3;
+    --gs-status-error: #e66767;
+    --gs-status-warning: #d9a441;
+    color-scheme: dark;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--gs-bg);
+  color: var(--gs-ink);
+  font: 14px / 1.5 var(--gs-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+#app,
+.gs-layout {
+  height: 100%;
+}
+
+.gs-layout {
+  display: grid;
+  grid-template-columns: 296px minmax(0, 1fr) 388px;
+}
+
+.gs-sidebar,
+.gs-inspector {
+  background: var(--gs-bg-raised);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gs-inspector {
+  overflow-y: auto;
+}
+
+/* The panel itself does not scroll; .gs-scroll inside it does. See sidebar.ts. */
+.gs-sidebar {
+  border-right: 1px solid var(--gs-line);
+  overflow: hidden;
+}
+
+.gs-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gs-inspector {
+  border-left: 1px solid var(--gs-line);
+  gap: 20px;
+}
+
+.gs-canvas-host {
+  position: relative;
+  min-width: 0;
+}
+
+.gs-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  touch-action: none;
+}
+
+/* Screen-reader-only live region: the canvas cannot announce its own selection. */
+.gs-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.gs-brand h1 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.gs-brand-sub {
+  margin: 2px 0 0;
+  font: 11px / 1.4 var(--gs-mono);
+  color: var(--gs-ink-muted);
+  word-break: break-all;
+}
+
+.gs-search {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--gs-line);
+  border-radius: var(--gs-radius);
+  background: var(--gs-bg);
+  color: inherit;
+  font: inherit;
+}
+
+.gs-search:focus-visible,
+.gs-chip:focus-visible,
+.gs-result:focus-visible,
+.gs-link:focus-visible,
+.gs-concept-link:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--gs-accent);
+  outline-offset: 2px;
+}
+
+.gs-results-count {
+  margin: 0;
+  font-size: 12px;
+  color: var(--gs-ink-muted);
+}
+
+.gs-results {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--gs-line);
+  border-radius: var(--gs-radius);
+  background: var(--gs-bg);
+}
+
+.gs-result {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 9px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gs-result:hover,
+.gs-result-hover {
+  background: var(--gs-bg-sunken);
+}
+
+.gs-result-on {
+  background: var(--gs-accent-soft);
+}
+
+.gs-result-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gs-result-type {
+  font: 10px / 1 var(--gs-mono);
+  color: var(--gs-ink-muted);
+  flex-shrink: 0;
+}
+
+.gs-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+.gs-dot-ghost {
+  background: none;
+  border: 1.5px dashed var(--gs-node-ghost);
+}
+
+.gs-dot-error {
+  background: none;
+  border: 2px solid var(--gs-status-error);
+}
+
+.gs-group {
+  border-top: 1px solid var(--gs-line);
+  padding-top: 8px;
+}
+
+.gs-group summary {
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--gs-ink-muted);
+}
+
+.gs-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.gs-chip {
+  padding: 3px 8px;
+  border: 1px solid var(--gs-line);
+  border-radius: 999px;
+  background: var(--gs-bg);
+  color: var(--gs-ink-muted);
+  font: 11px / 1.5 var(--gs-sans);
+  cursor: pointer;
+}
+
+.gs-chip-on {
+  background: var(--gs-accent-soft);
+  border-color: var(--gs-accent);
+  color: var(--gs-ink);
+}
+
+.gs-toggles {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.gs-toggle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.gs-link-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.gs-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--gs-accent);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.gs-focus {
+  display: contents;
+}
+
+.gs-focus-label {
+  margin: 0;
+  font-size: 12px;
+  color: var(--gs-ink-muted);
+}
+
+.gs-focus-controls {
+  display: flex;
+  gap: 5px;
+}
+
+.gs-legend {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12px;
+}
+
+.gs-legend li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gs-stats {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--gs-line);
+}
+
+.gs-stat {
+  text-align: center;
+}
+
+.gs-stat-value {
+  display: block;
+  font: 600 15px / 1.2 var(--gs-mono);
+}
+
+.gs-stat-label {
+  display: block;
+  font-size: 10px;
+  color: var(--gs-ink-muted);
+}
+
+.gs-stat-error .gs-stat-value {
+  color: var(--gs-status-error);
+}
+
+.gs-stat-warning .gs-stat-value {
+  color: var(--gs-status-warning);
+}
+
+/* Inspector */
+
+.gs-placeholder {
+  color: var(--gs-ink-muted);
+  font-size: 13px;
+}
+
+.gs-hints {
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gs-inspect-head h2 {
+  margin: 6px 0 2px;
+  font-size: 18px;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.gs-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font: 11px / 1 var(--gs-mono);
+  color: var(--gs-ink-muted);
+}
+
+.gs-badge-ghost {
+  color: var(--gs-status-warning);
+}
+
+.gs-badge-inline {
+  margin-left: 6px;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: var(--gs-bg-sunken);
+  font: 10px / 1.4 var(--gs-mono);
+  color: var(--gs-ink-muted);
+}
+
+.gs-inspect-path {
+  margin: 0;
+  font: 11px / 1.4 var(--gs-mono);
+  color: var(--gs-ink-muted);
+  word-break: break-all;
+}
+
+.gs-inspect-desc,
+.gs-inspect-note {
+  margin: 8px 0 0;
+  color: var(--gs-ink-muted);
+  font-size: 13px;
+}
+
+.gs-section h3 {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--gs-ink-muted);
+}
+
+.gs-fm {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.gs-fm th,
+.gs-fm td {
+  border-top: 1px solid var(--gs-line);
+  padding: 4px 0;
+  text-align: left;
+  vertical-align: top;
+}
+
+.gs-fm th {
+  width: 34%;
+  font: 400 12px / 1.5 var(--gs-mono);
+  color: var(--gs-ink-muted);
+  padding-right: 10px;
+}
+
+.gs-problems {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gs-problem {
+  display: flex;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--gs-radius);
+  background: var(--gs-bg-sunken);
+  border-left: 3px solid var(--gs-ink-muted);
+  font-size: 12px;
+}
+
+.gs-problem-error {
+  border-left-color: var(--gs-status-error);
+}
+
+.gs-problem-warning,
+.gs-problem-gap {
+  border-left-color: var(--gs-status-warning);
+}
+
+.gs-problem-rule {
+  font: 11px / 1.5 var(--gs-mono);
+  color: var(--gs-ink-muted);
+  flex-shrink: 0;
+}
+
+.gs-rels {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.gs-rel-dir {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.gs-rel-group {
+  margin-bottom: 8px;
+}
+
+.gs-rel-name {
+  margin: 0;
+  font: 11px / 1.5 var(--gs-mono);
+  color: var(--gs-ink-muted);
+  cursor: help;
+}
+
+.gs-rel-list {
+  list-style: none;
+  margin: 2px 0 0;
+  padding: 0 0 0 10px;
+  border-left: 1px solid var(--gs-line);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gs-concept-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--gs-accent);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gs-concept-link:hover {
+  text-decoration: underline;
+}
+
+/* Rendered markdown */
+
+.gs-md {
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.gs-md h3,
+.gs-md h4,
+.gs-md h5,
+.gs-md h6 {
+  margin: 14px 0 6px;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.gs-md p,
+.gs-md ul,
+.gs-md ol {
+  margin: 0 0 8px;
+}
+
+.gs-md ul,
+.gs-md ol {
+  padding-left: 18px;
+}
+
+.gs-md code {
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: var(--gs-bg-sunken);
+  font: 12px / 1.4 var(--gs-mono);
+}
+
+.gs-md pre {
+  margin: 0 0 8px;
+  padding: 10px;
+  border-radius: var(--gs-radius);
+  background: var(--gs-bg-sunken);
+  overflow-x: auto;
+}
+
+.gs-md pre code {
+  padding: 0;
+  background: none;
+}
+
+.gs-md blockquote {
+  margin: 0 0 8px;
+  padding-left: 10px;
+  border-left: 2px solid var(--gs-line);
+  color: var(--gs-ink-muted);
+}
+
+.gs-md table {
+  width: 100%;
+  margin-bottom: 8px;
+  border-collapse: collapse;
+  font-size: 12px;
+  display: block;
+  overflow-x: auto;
+}
+
+.gs-md th,
+.gs-md td {
+  border: 1px solid var(--gs-line);
+  padding: 4px 7px;
+  text-align: left;
+}
+
+.gs-md a {
+  color: var(--gs-accent);
+}
+
+.gs-md hr {
+  border: 0;
+  border-top: 1px solid var(--gs-line);
+}
+
+.gs-empty {
+  color: var(--gs-ink-muted);
+  font-size: 12px;
+  padding: 8px;
+  list-style: none;
+}
+
+.gs-fatal {
+  padding: 24px;
+  color: var(--gs-status-error);
+}
+
+/* Below this width the three-pane layout stops working; stack it instead. */
+@media (max-width: 1080px) {
+  .gs-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 60vh auto;
+    height: auto;
+    min-height: 100%;
+  }
+
+  .gs-sidebar {
+    border-right: 0;
+    border-bottom: 1px solid var(--gs-line);
+  }
+
+  .gs-inspector {
+    border-left: 0;
+    border-top: 1px solid var(--gs-line);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}

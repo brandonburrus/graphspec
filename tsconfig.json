@@ -21,5 +21,7 @@
     "verbatimModuleSyntax": true
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "tests", "**/*.test.ts"]
+  // src/viewer is browser code needing the DOM lib and is emitted by esbuild, not tsc.
+  // It has its own tsconfig.viewer.json for typechecking.
+  "exclude": ["node_modules", "dist", "tests", "**/*.test.ts", "src/viewer"]
 }

@@ -176,6 +176,7 @@ export default defineConfig({
             { label: "graph", slug: "cli/graph" },
             { label: "coverage", slug: "cli/coverage" },
             { label: "order", slug: "cli/order" },
+            { label: "visualize", slug: "cli/visualize" },
           ],
         },
         {

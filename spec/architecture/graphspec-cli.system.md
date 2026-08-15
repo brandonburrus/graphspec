@@ -9,9 +9,11 @@ relations:
     - /architecture/graph-model.component.md
     - /architecture/validator.component.md
     - /architecture/profile-model.component.md
+    - /architecture/visualizer.component.md
   realizes:
     - /product/validate-a-bundle.feature.md
     - /product/query-concepts.feature.md
+    - /product/visualize-the-graph.feature.md
   exposes:
     - /architecture/cli-contract.contract.md
   satisfies:

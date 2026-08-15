@@ -1,7 +1,8 @@
 # src/commands — CLI subcommand implementations
 
-One module per subcommand (`validate`, `query`, `index-cmd`, `graph`, `coverage`, `order`),
-plus `io.ts` (the `Writer` seam) and `table.ts` (shared formatting). `src/cli.ts` owns
+One module per subcommand (`validate`, `query`, `index-cmd`, `graph`, `coverage`, `order`,
+`visualize`, `visualize-serve`), plus `io.ts` (the `Writer` seam) and `table.ts` (shared
+formatting). `src/cli.ts` owns
 Commander wiring and flag parsing; these modules own behavior.
 
 `src/cli.ts` is the entry point and does nothing but run the program. The program itself is
@@ -38,7 +39,15 @@ Keep this split intact. Scripts and agents distinguish "your spec has a problem"
 - `--direction` without `--from` is a no-op and emits a note rather than an error, because
   the traversal it would modify never runs.
 - `index-cmd` rewrites every `index.md` in place and can append to `log.md`. It is the only
-  command that writes to the bundle; run it after adding or renaming concepts, and prefer
-  `--dry-run` first.
+  command that writes *into* the bundle; run it after adding or renaming concepts, and prefer
+  `--dry-run` first. `visualize` also writes, but outside the bundle.
+- **`visualize` never returns 1.** Validation errors and coverage gaps are rendered into the
+  page instead, because a broken graph is the one most worth looking at. That is the
+  permissive-OKF constraint applied to this surface, not an oversight.
+- `visualize serve` is the only long-running command. It takes an `onReady` option purely as a
+  test seam, so a test can drive the live server and shut it down instead of blocking on a
+  signal. `serve` being a subcommand means a bundle directory literally named `serve` has to
+  be passed as `./serve`.
 - Adding a subcommand means: a module here, a `Writer`-injected `run` function, wiring in
-  `src/cli.ts`, and an entry in the `cli-contract.contract.md` concept in `spec/`.
+  `src/program.ts`, an entry in the `cli-contract.contract.md` concept in `spec/`, and a page
+  under `docs/src/content/docs/cli/` plus its sidebar entry in `docs/astro.config.mjs`.

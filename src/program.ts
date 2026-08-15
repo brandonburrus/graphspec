@@ -14,6 +14,8 @@ import { consoleWriter } from "./commands/io.js";
 import { runOrder } from "./commands/order.js";
 import { runQuery } from "./commands/query.js";
 import { runValidate } from "./commands/validate.js";
+import { runVisualizeServe } from "./commands/visualize-serve.js";
+import { DEFAULT_OUTPUT, runVisualize } from "./commands/visualize.js";
 import { packageVersion } from "./version.js";
 
 /** Build the commander program (exported for testing). */
@@ -115,6 +117,33 @@ export function buildProgram(): Command {
     .option("--strict", "exit non-zero when any gap is found", false)
     .action(async (path: string, opts: { json: boolean; strict: boolean }) => {
       const code = await runCoverage(path, opts, consoleWriter);
+      process.exitCode = code;
+    });
+
+  // `visualize` carries both a default action (write a file) and a `serve` subcommand.
+  // Commander resolves the subcommand first, so a bundle directory literally named `serve`
+  // must be passed as `./serve`.
+  const visualize = program
+    .command("visualize")
+    .argument("[path]", "path to the OKF bundle", ".")
+    .description("Render the bundle as a self-contained, interactive HTML graph")
+    .option("--out <file>", "output HTML file", DEFAULT_OUTPUT)
+    .option("--title <text>", "page title (defaults to the bundle directory name)")
+    .option("--open", "open the generated file in the default browser", false)
+    .action(async (path: string, opts: { out?: string; title?: string; open?: boolean }) => {
+      const code = await runVisualize(path, opts, consoleWriter);
+      process.exitCode = code;
+    });
+
+  visualize
+    .command("serve")
+    .argument("[path]", "path to the OKF bundle", ".")
+    .description("Serve the visualization locally and hot-reload it as the bundle changes")
+    .option("--port <n>", "port to listen on")
+    .option("--title <text>", "page title (defaults to the bundle directory name)")
+    .option("--no-open", "do not open a browser on start")
+    .action(async (path: string, opts: { port?: string; title?: string; open?: boolean }) => {
+      const code = await runVisualizeServe(path, opts, consoleWriter);
       process.exitCode = code;
     });
 

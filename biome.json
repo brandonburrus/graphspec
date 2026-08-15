@@ -12,7 +12,9 @@
       "spec/**/*.md",
       "tests/fixtures/**",
       "docs/dist/**",
-      "docs/.astro/**"
+      "docs/.astro/**",
+      "test-results/**",
+      "playwright-report/**"
     ]
   },
   "organizeImports": {
